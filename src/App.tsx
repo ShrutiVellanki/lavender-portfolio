@@ -208,7 +208,7 @@ export default function App() {
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-lavender-50/80 dark:bg-lavender-900/80 border-b border-lavender-300/50 dark:border-lavender-700/20">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <a href="#" className="text-sm font-semibold tracking-tight text-iris dark:text-iris-light">SV</a>
+          <a href="#" className="text-sm font-semibold tracking-tight text-iris dark:text-iris-light">Shruti Vellanki</a>
           <div className="flex items-center gap-6">
             <ul className="hidden sm:flex items-center gap-5">
               {NAV_LINKS.map((l) => (
