@@ -174,11 +174,40 @@ const ACCENT_STYLES: Record<string, { borderTop: string; borderLeft: string; tex
   rose:  { borderTop: "border-t-rose/60 dark:border-t-rose-light/40", borderLeft: "border-l-rose/60 dark:border-l-rose-light/40", text: "text-rose dark:text-rose-light", bullet: "before:bg-rose dark:before:bg-rose-light", hoverText: "hover:text-rose dark:hover:text-rose-light", dot: "border-rose dark:border-rose-light", line: "border-l-rose/30 dark:border-l-rose-light/20" },
 };
 
+function useScrollProgress() {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    const fn = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      setP(h > 0 ? window.scrollY / h : 0);
+    };
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+  return p;
+}
+
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll(".reveal, .stagger");
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); }
+      }),
+      { threshold: 0.12, rootMargin: "0px 0px -50px 0px" },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
+
 export default function App() {
   const { dark, toggle } = useTheme();
   const [showTop, setShowTop] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const progress = useScrollProgress();
+  useReveal();
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 400);
@@ -204,44 +233,49 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-lavender-50 text-lavender-700 dark:bg-lavender-900 dark:text-lavender-200 transition-colors duration-300">
+    <div className="dot-grid min-h-screen bg-lavender-50 text-lavender-700 dark:bg-lavender-900 dark:text-lavender-200 transition-colors duration-300">
+      {/* Progress */}
+      <div className="fixed top-0 inset-x-0 z-[60] h-[2px]">
+        <div className="scroll-bar h-full" style={{ transform: `scaleX(${progress})` }} />
+      </div>
+
       {/* Nav */}
-      <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-lavender-50/80 dark:bg-lavender-900/80 border-b border-lavender-300/50 dark:border-lavender-700/20">
+      <nav className="fixed top-[2px] inset-x-0 z-50 backdrop-blur-md bg-lavender-50/80 dark:bg-lavender-900/80 border-b border-lavender-300/40 dark:border-lavender-700/15">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <a href="#" className="text-sm font-semibold tracking-tight text-iris dark:text-iris-light">Shruti Vellanki</a>
+          <a href="#" className="text-sm font-bold tracking-tight text-lavender-700 dark:text-lavender-100">Shruti Vellanki</a>
           <div className="flex items-center gap-6">
             <ul className="hidden sm:flex items-center gap-5">
               {NAV_LINKS.map((l) => (
                 <li key={l.href}>
-                  <a href={l.href} className={`inline-flex items-center gap-1.5 text-[13px] transition-colors ${activeSection === l.href.replace("#", "") ? `${l.active} font-medium` : "text-lavender-600 dark:text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-300"}`}>
+                  <a href={l.href} className={`nav-ul relative inline-flex items-center gap-1.5 text-[13px] transition-colors ${activeSection === l.href.replace("#", "") ? `${l.active} font-medium active` : "text-lavender-500 dark:text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200"}`}>
                     {l.icon} {l.label}
                   </a>
                 </li>
               ))}
             </ul>
-            <a href="#contact" className="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-iris to-foam dark:from-iris-light dark:to-foam-light text-white dark:text-lavender-900 text-[13px] font-medium hover:opacity-90 hover:shadow-md hover:shadow-iris/20 transition-all">
+            <a href="#contact" className="hidden sm:inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-foam dark:bg-foam-light text-white dark:text-lavender-900 text-[13px] font-medium hover:opacity-90 transition-opacity">
               <Coffee className="w-3.5 h-3.5" /> Get in Touch
             </a>
-            <button onClick={toggle} className="p-2 rounded-lg text-lavender-600 dark:text-lavender-500 hover:bg-lavender-200/60 dark:hover:bg-lavender-950/60 transition-colors" aria-label="Toggle theme">
+            <button onClick={toggle} className="p-2 rounded-lg text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200 transition-colors" aria-label="Toggle theme">
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            <button onClick={() => setMobileNav(!mobileNav)} className="sm:hidden p-2 rounded-lg text-lavender-600 dark:text-lavender-500 hover:bg-lavender-200/60 dark:hover:bg-lavender-950/60 transition-colors" aria-label="Toggle menu">
+            <button onClick={() => setMobileNav(!mobileNav)} className="sm:hidden p-2 rounded-lg text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200 transition-colors" aria-label="Toggle menu">
               {mobileNav ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
         {mobileNav && (
-          <div className="sm:hidden border-t border-lavender-300/50 dark:border-lavender-700/20 bg-lavender-50/95 dark:bg-lavender-900/95 backdrop-blur-md">
+          <div className="sm:hidden border-t border-lavender-300/40 dark:border-lavender-700/15 bg-lavender-50/95 dark:bg-lavender-900/95 backdrop-blur-md">
             <ul className="px-6 py-4 space-y-3">
               {NAV_LINKS.map((l) => (
                 <li key={l.href}>
-                  <a href={l.href} onClick={() => setMobileNav(false)} className={`flex items-center gap-2 text-sm transition-colors ${activeSection === l.href.replace("#", "") ? `${l.active} font-medium` : "text-lavender-600 dark:text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-300"}`}>
+                  <a href={l.href} onClick={() => setMobileNav(false)} className={`flex items-center gap-2 text-sm transition-colors ${activeSection === l.href.replace("#", "") ? `${l.active} font-medium` : "text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200"}`}>
                     {l.icon} {l.label}
                   </a>
                 </li>
               ))}
               <li>
-                <a href="#contact" onClick={() => setMobileNav(false)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-iris to-foam dark:from-iris-light dark:to-foam-light text-white dark:text-lavender-900 text-sm font-medium hover:opacity-90 hover:shadow-md hover:shadow-iris/20 transition-all">
+                <a href="#contact" onClick={() => setMobileNav(false)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-foam dark:bg-foam-light text-white dark:text-lavender-900 text-sm font-medium hover:opacity-90 transition-opacity">
                   <Coffee className="w-3.5 h-3.5" /> Get in Touch
                 </a>
               </li>
@@ -251,25 +285,22 @@ export default function App() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 sm:pt-40 sm:pb-28 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-iris/[0.06] via-transparent to-foam/[0.06] dark:from-iris-light/[0.06] dark:via-transparent dark:to-foam-light/[0.06]" />
-        <div className="absolute top-20 -left-32 w-64 h-64 rounded-full bg-love/[0.06] dark:bg-love-light/[0.06] blur-3xl" />
-        <div className="absolute bottom-10 -right-32 w-64 h-64 rounded-full bg-gold/[0.06] dark:bg-gold-light/[0.06] blur-3xl" />
-        <div className="max-w-5xl mx-auto text-center relative">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] gradient-text">
+      <section className="pt-36 pb-24 sm:pt-44 sm:pb-32 px-6">
+        <div className="max-w-5xl mx-auto text-center hero-enter">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.03em] leading-[1.08] text-lavender-700 dark:text-lavender-100">
             Shruti Vellanki
           </h1>
-          <p className="mt-4 text-xl sm:text-2xl text-lavender-600 dark:text-lavender-500">
+          <p className="mt-5 text-lg sm:text-xl text-lavender-500 dark:text-lavender-500 font-light tracking-wide">
             Building systems under pressure.
           </p>
-          <div className="mt-6 flex items-center justify-center gap-4">
-            <a href="https://github.com/ShrutiVellanki" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="p-3 rounded-full border border-lavender-300/60 dark:border-lavender-700/20 text-lavender-600 dark:text-lavender-500 hover:text-pine dark:hover:text-pine-light hover:border-pine/30 dark:hover:border-pine-light/30 hover:bg-pine/5 dark:hover:bg-pine-light/5 transition-all">
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <a href="https://github.com/ShrutiVellanki" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="p-3 rounded-full border border-lavender-300/50 dark:border-lavender-700/20 text-lavender-500 hover:text-pine dark:hover:text-pine-light hover:border-pine/30 dark:hover:border-pine-light/30 hover:bg-pine/5 dark:hover:bg-pine-light/5 transition-all">
               <GithubIcon className="w-5 h-5" />
             </a>
-            <a href="https://www.linkedin.com/in/shruti-vellanki/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="p-3 rounded-full border border-lavender-300/60 dark:border-lavender-700/20 text-lavender-600 dark:text-lavender-500 hover:text-foam dark:hover:text-foam-light hover:border-foam/30 dark:hover:border-foam-light/30 hover:bg-foam/5 dark:hover:bg-foam-light/5 transition-all">
+            <a href="https://www.linkedin.com/in/shruti-vellanki/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="p-3 rounded-full border border-lavender-300/50 dark:border-lavender-700/20 text-lavender-500 hover:text-foam dark:hover:text-foam-light hover:border-foam/30 dark:hover:border-foam-light/30 hover:bg-foam/5 dark:hover:bg-foam-light/5 transition-all">
               <LinkedinIcon className="w-5 h-5" />
             </a>
-            <a href="mailto:shvellanki@gmail.com" aria-label="Email" className="p-3 rounded-full border border-lavender-300/60 dark:border-lavender-700/20 text-lavender-600 dark:text-lavender-500 hover:text-rose dark:hover:text-rose-light hover:border-rose/30 dark:hover:border-rose-light/30 hover:bg-rose/5 dark:hover:bg-rose-light/5 transition-all">
+            <a href="mailto:shvellanki@gmail.com" aria-label="Email" className="p-3 rounded-full border border-lavender-300/50 dark:border-lavender-700/20 text-lavender-500 hover:text-rose dark:hover:text-rose-light hover:border-rose/30 dark:hover:border-rose-light/30 hover:bg-rose/5 dark:hover:bg-rose-light/5 transition-all">
               <Mail className="w-5 h-5" />
             </a>
           </div>
@@ -277,10 +308,10 @@ export default function App() {
       </section>
 
       {/* About */}
-      <section id="about" className="py-20 px-6 bg-gradient-to-br from-transparent via-iris/[0.03] to-transparent dark:via-iris-light/[0.04]">
-        <div className="max-w-5xl mx-auto">
-          <SectionHeading icon={<User className="w-6 h-6" />} iconColor="text-iris dark:text-iris-light">About</SectionHeading>
-          <div className="mt-8 max-w-3xl text-[15px] leading-relaxed text-lavender-600 dark:text-lavender-500">
+      <section id="about" className="py-16 px-6">
+        <div className="max-w-5xl mx-auto reveal">
+          <SectionHeading icon={<User className="w-6 h-6" />} iconColor="text-iris dark:text-iris-light" ruleColor="bg-iris dark:bg-iris-light">About</SectionHeading>
+          <div className="mt-8 max-w-3xl text-[15px] leading-[1.8] text-lavender-600 dark:text-lavender-500">
             <p>
               Software Engineer with <strong className="text-lavender-700 dark:text-lavender-200">5+ years</strong> building <strong className="text-lavender-700 dark:text-lavender-200">frontend applications</strong> and <strong className="text-lavender-700 dark:text-lavender-200">design systems</strong> to serve over <strong className="text-lavender-700 dark:text-lavender-200">50M+ users</strong>. Experienced in <strong className="text-lavender-700 dark:text-lavender-200">React</strong>, <strong className="text-lavender-700 dark:text-lavender-200">TypeScript</strong>, <strong className="text-lavender-700 dark:text-lavender-200">JavaScript</strong>, and <strong className="text-lavender-700 dark:text-lavender-200">Svelte</strong>, collaborating across product, design and engineering to deliver <strong className="text-lavender-700 dark:text-lavender-200">scalable solutions</strong> that serve both <strong className="text-lavender-700 dark:text-lavender-200">user needs</strong> and <strong className="text-lavender-700 dark:text-lavender-200">business goals</strong>.
             </p>
@@ -289,14 +320,14 @@ export default function App() {
       </section>
 
       {/* Skills */}
-      <section id="skills" className="py-20 px-6 bg-gradient-to-br from-foam/[0.04] via-white/50 to-iris/[0.04] dark:from-foam-light/[0.04] dark:via-lavender-950/30 dark:to-iris-light/[0.04]">
-        <div className="max-w-5xl mx-auto">
-          <SectionHeading icon={<Wrench className="w-6 h-6" />} iconColor="text-foam dark:text-foam-light">Skills</SectionHeading>
-          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <section id="skills" className="py-16 px-6 bg-lavender-100/40 dark:bg-lavender-950/30">
+        <div className="max-w-5xl mx-auto reveal">
+          <SectionHeading icon={<Wrench className="w-6 h-6" />} iconColor="text-foam dark:text-foam-light" ruleColor="bg-foam dark:bg-foam-light">Skills</SectionHeading>
+          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger">
             {SKILLS.map((s) => {
               const a = ACCENT_STYLES[s.accent] || ACCENT_STYLES.iris;
               return (
-                <div key={s.category} className={`rounded-xl border border-lavender-300/60 dark:border-lavender-700/20 border-t-2 ${a.borderTop} bg-white/60 dark:bg-lavender-950/40 p-5 hover:shadow-md transition-shadow`}>
+                <div key={s.category} className={`lift rounded-xl border border-lavender-300/50 dark:border-lavender-700/15 border-t-2 ${a.borderTop} bg-white/70 dark:bg-lavender-900/60 p-5 hover:shadow-md`}>
                   <div className="flex items-center gap-2 mb-3">
                     <span className={a.text}>{s.icon}</span>
                     <h3 className="text-sm font-semibold text-lavender-700 dark:text-lavender-100">{s.category}</h3>
@@ -314,9 +345,9 @@ export default function App() {
       </section>
 
       {/* Experience */}
-      <section id="experience" className="py-20 px-6 bg-gradient-to-bl from-transparent via-gold/[0.03] to-transparent dark:via-gold-light/[0.04]">
-        <div className="max-w-5xl mx-auto">
-          <SectionHeading icon={<Briefcase className="w-6 h-6" />} iconColor="text-gold dark:text-gold-light">Experience</SectionHeading>
+      <section id="experience" className="py-16 px-6">
+        <div className="max-w-5xl mx-auto reveal">
+          <SectionHeading icon={<Briefcase className="w-6 h-6" />} iconColor="text-gold dark:text-gold-light" ruleColor="bg-gold dark:bg-gold-light">Experience</SectionHeading>
           <div className="mt-8 space-y-10">
             {EXPERIENCE.map((exp) => {
               const ea = ACCENT_STYLES[exp.accent] || ACCENT_STYLES.iris;
@@ -356,14 +387,14 @@ export default function App() {
       </section>
 
       {/* Projects */}
-      <section id="projects" className="py-20 px-6 bg-gradient-to-br from-pine/[0.03] via-white/50 to-love/[0.03] dark:from-pine-light/[0.03] dark:via-lavender-950/30 dark:to-love-light/[0.03]">
-        <div className="max-w-5xl mx-auto">
-          <SectionHeading icon={<Code2 className="w-6 h-6" />} iconColor="text-pine dark:text-pine-light">Projects</SectionHeading>
-          <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section id="projects" className="py-16 px-6 bg-lavender-100/40 dark:bg-lavender-950/30">
+        <div className="max-w-5xl mx-auto reveal">
+          <SectionHeading icon={<Code2 className="w-6 h-6" />} iconColor="text-pine dark:text-pine-light" ruleColor="bg-pine dark:bg-pine-light">Projects</SectionHeading>
+          <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
             {PROJECTS.map((p) => {
               const a = ACCENT_STYLES[p.accent] || ACCENT_STYLES.iris;
               return (
-                <div key={p.title} className={`group flex flex-col rounded-xl border border-lavender-300/60 dark:border-lavender-700/20 border-l-2 ${a.borderLeft} bg-white/60 dark:bg-lavender-950/40 p-6 hover:shadow-lg hover:shadow-lavender-400/10 dark:hover:shadow-lavender-900/20 transition-all duration-300`}>
+                <div key={p.title} className={`lift group flex flex-col rounded-xl border border-lavender-300/50 dark:border-lavender-700/15 border-l-2 ${a.borderLeft} bg-white/70 dark:bg-lavender-900/60 p-6 hover:shadow-lg hover:shadow-lavender-400/10 dark:hover:shadow-lavender-900/20`}>
                   <div className="flex items-center gap-3 mb-3">
                     <span className={a.text}>{p.icon}</span>
                     <h3 className="text-base font-semibold text-lavender-700 dark:text-lavender-100">{p.title}</h3>
@@ -392,14 +423,14 @@ export default function App() {
       </section>
 
       {/* Talks */}
-      <section id="talks" className="py-20 px-6 bg-gradient-to-br from-love/[0.04] via-white/50 to-rose/[0.04] dark:from-love-light/[0.04] dark:via-lavender-950/30 dark:to-rose-light/[0.04]">
-        <div className="max-w-5xl mx-auto">
-          <SectionHeading icon={<Mic className="w-6 h-6" />} iconColor="text-love dark:text-love-light">Talks</SectionHeading>
-          <div className="mt-8 grid sm:grid-cols-2 gap-6">
+      <section id="talks" className="py-16 px-6">
+        <div className="max-w-5xl mx-auto reveal">
+          <SectionHeading icon={<Mic className="w-6 h-6" />} iconColor="text-love dark:text-love-light" ruleColor="bg-love dark:bg-love-light">Talks</SectionHeading>
+          <div className="mt-8 grid sm:grid-cols-2 gap-6 stagger">
             {TALKS.map((talk) => {
               const ta = ACCENT_STYLES[talk.accent] || ACCENT_STYLES.iris;
               return (
-                <div key={talk.title} className={`rounded-xl border border-lavender-300/60 dark:border-lavender-700/20 border-t-2 ${ta.borderTop} bg-white/60 dark:bg-lavender-950/40 p-6 hover:shadow-md transition-shadow`}>
+                <div key={talk.title} className={`lift rounded-xl border border-lavender-300/50 dark:border-lavender-700/15 border-t-2 ${ta.borderTop} bg-white/70 dark:bg-lavender-900/60 p-6 hover:shadow-md`}>
                   <div className="flex items-center gap-2 mb-2">
                     <Mic className={`w-4 h-4 ${ta.text} shrink-0`} />
                     <h3 className="text-sm font-semibold text-lavender-700 dark:text-lavender-100">{talk.title}</h3>
@@ -422,9 +453,9 @@ export default function App() {
       </section>
 
       {/* Contact */}
-      <section id="contact" className="py-20 px-6 bg-gradient-to-t from-iris/[0.04] via-transparent to-transparent dark:from-iris-light/[0.04]">
-        <div className="max-w-5xl mx-auto text-center">
-          <SectionHeading center icon={<Coffee className="w-6 h-6" />} iconColor="text-rose dark:text-rose-light">Get in Touch</SectionHeading>
+      <section id="contact" className="py-16 px-6 bg-lavender-100/40 dark:bg-lavender-950/30">
+        <div className="max-w-5xl mx-auto text-center reveal">
+          <SectionHeading center icon={<Coffee className="w-6 h-6" />} iconColor="text-rose dark:text-rose-light" ruleColor="bg-rose dark:bg-rose-light">Get in Touch</SectionHeading>
           <p className="mt-4 text-[15px] text-lavender-600 dark:text-lavender-500 max-w-md mx-auto">
             Always open to interesting conversations and opportunities — or just grabbing a coffee somewhere in Toronto. Feel free to reach out.
           </p>
@@ -450,22 +481,29 @@ export default function App() {
       </footer>
 
       {showTop && (
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 p-2.5 rounded-full bg-iris dark:bg-iris-light text-white dark:text-lavender-900 shadow-lg hover:opacity-90 transition-opacity z-40" aria-label="Back to top">
-          <ArrowUp className="w-4 h-4" />
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 group z-40" aria-label="Back to top">
+          <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="1" className="text-lavender-300/40 dark:text-lavender-700/30" />
+            <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray={100.53} strokeDashoffset={100.53 * (1 - progress)} strokeLinecap="round" className="text-foam dark:text-foam-light transition-all duration-300" />
+          </svg>
+          <ArrowUp className="w-4 h-4 absolute inset-0 m-auto text-foam dark:text-foam-light group-hover:scale-110 transition-transform" />
         </button>
       )}
     </div>
   );
 }
 
-function SectionHeading({ children, center, icon, iconColor }: { children: React.ReactNode; center?: boolean; icon?: React.ReactNode; iconColor?: string }) {
+function SectionHeading({ children, center, icon, iconColor, ruleColor }: { children: React.ReactNode; center?: boolean; icon?: React.ReactNode; iconColor?: string; ruleColor?: string }) {
   return (
-    <h2 className={`text-2xl sm:text-3xl font-bold tracking-tight text-lavender-700 dark:text-lavender-100 ${center ? "text-center" : ""}`}>
-      <span className={`inline-flex items-center gap-2.5 ${center ? "justify-center" : ""}`}>
-        {icon && <span className={iconColor || "text-iris dark:text-iris-light"}>{icon}</span>}
-        {children}
-      </span>
-    </h2>
+    <div className={center ? "text-center" : ""}>
+      <h2 className={`text-2xl sm:text-3xl font-bold tracking-[-0.02em] text-lavender-700 dark:text-lavender-100`}>
+        <span className={`inline-flex items-center gap-2.5 ${center ? "justify-center" : ""}`}>
+          {icon && <span className={iconColor || "text-iris dark:text-iris-light"}>{icon}</span>}
+          {children}
+        </span>
+      </h2>
+      <span className={`heading-rule ${center ? "mx-auto" : ""} ${ruleColor || "bg-iris dark:bg-iris-light"}`} />
+    </div>
   );
 }
 

@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
   --color-lavender-50: #fafafc;
   --color-lavender-100: #f3f2f7;
@@ -18,17 +18,17 @@
   --color-lavender-950: #1a1830;
 
   --color-iris: #907aa9;
-  --color-iris-light: #c4a7e7;
-  --color-foam: #56949f;
-  --color-foam-light: #9ccfd8;
+  --color-iris-light: #d4bdef;
+  --color-foam: #6e9a82;
+  --color-foam-light: #a8d4b8;
   --color-love: #b4637a;
-  --color-love-light: #eb6f92;
+  --color-love-light: #f082a0;
   --color-gold: #ea9d34;
-  --color-gold-light: #f6c177;
-  --color-pine: #286983;
-  --color-pine-light: #3e8fb0;
+  --color-gold-light: #fad49a;
+  --color-pine: #856b80;
+  --color-pine-light: #ccb0c6;
   --color-rose: #d7827e;
-  --color-rose-light: #ea9a97;
+  --color-rose-light: #f0ada9;
 }
 
 html {
@@ -43,22 +43,126 @@ body {
 
 @layer base {
   ::selection {
-    background-color: rgba(144, 122, 169, 0.25);
+    background-color: rgba(110, 154, 130, 0.2);
   }
   .dark ::selection {
-    background-color: rgba(196, 167, 231, 0.25);
+    background-color: rgba(143, 191, 165, 0.2);
   }
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #907aa9 0%, #56949f 50%, #b4637a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* ── Dot-grid texture ── */
+.dot-grid::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.3;
+  background-image: radial-gradient(circle, var(--color-lavender-400) 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
 }
-.dark .gradient-text {
-  background: linear-gradient(135deg, #c4a7e7 0%, #9ccfd8 50%, #eb6f92 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.dark .dot-grid::after {
+  opacity: 0.08;
+  background-image: radial-gradient(circle, var(--color-lavender-600) 0.5px, transparent 0.5px);
+}
+
+/* ── Scroll progress ── */
+.scroll-bar {
+  transform-origin: left;
+  height: 2px;
+  background: var(--color-foam);
+}
+.dark .scroll-bar {
+  background: var(--color-foam-light);
+}
+
+/* ── Scroll-triggered reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stagger > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.stagger.visible > *:nth-child(1) { transition-delay: 0ms; }
+.stagger.visible > *:nth-child(2) { transition-delay: 70ms; }
+.stagger.visible > *:nth-child(3) { transition-delay: 140ms; }
+.stagger.visible > *:nth-child(4) { transition-delay: 210ms; }
+.stagger.visible > *:nth-child(5) { transition-delay: 280ms; }
+.stagger.visible > *:nth-child(6) { transition-delay: 350ms; }
+.stagger.visible > *:nth-child(7) { transition-delay: 420ms; }
+.stagger.visible > * {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.stagger.visible > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Hero entrance ── */
+.hero-enter > * {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: slide-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.hero-enter > *:nth-child(1) { animation-delay: 0.15s; }
+.hero-enter > *:nth-child(2) { animation-delay: 0.3s; }
+.hero-enter > *:nth-child(3) { animation-delay: 0.45s; }
+
+@keyframes slide-up {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Card lift ── */
+.lift {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lift:hover {
+  transform: translateY(-3px);
+}
+
+/* ── Nav underline ── */
+.nav-ul::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: currentColor;
+  transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-ul:hover::after,
+.nav-ul.active::after {
+  width: 100%;
+}
+
+/* ── Section divider accent ── */
+.heading-rule {
+  display: block;
+  width: 32px;
+  height: 2px;
+  margin-top: 10px;
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .stagger > *, .hero-enter > * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
 }
