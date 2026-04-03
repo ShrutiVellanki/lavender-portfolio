@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Sun, Moon, Mail, ExternalLink, ArrowUp, Code2, Palette,
   BarChart3, Globe, Briefcase, Mic, Menu, X, Coffee, User, Wrench,
