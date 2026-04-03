@@ -208,24 +208,7 @@ export default function App() {
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-lavender-50/80 dark:bg-lavender-900/80 border-b border-lavender-300/50 dark:border-lavender-700/20">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <a href="#" className="text-sm font-semibold tracking-tight text-iris dark:text-iris-light inline-flex items-center gap-1.5">
-            <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-              <path d="M8 14C8 8 11 4 16 4C21 4 24 8 24 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
-              <path d="M6 16C6 16 7 10 8 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-              <path d="M26 16C26 16 25 10 24 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-              <circle cx="16" cy="16" r="7" stroke="currentColor" strokeWidth="2" fill="none"/>
-              <circle cx="13.5" cy="15" r="0.8" fill="currentColor"/>
-              <circle cx="18.5" cy="15" r="0.8" fill="currentColor"/>
-              <path d="M13 18.5C13.8 19.5 15 20 16 20C17 20 18.2 19.5 19 18.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
-              <path d="M11 23V28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M21 23V28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M10 23H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <rect x="6" y="26" width="20" height="2" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-              <path d="M10 23L8 26" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M22 23L24 26" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            Shruti Vellanki
-          </a>
+          <a href="#" className="text-sm font-semibold tracking-tight text-iris dark:text-iris-light">Shruti Vellanki</a>
           <div className="flex items-center gap-6">
             <ul className="hidden sm:flex items-center gap-5">
               {NAV_LINKS.map((l) => (
