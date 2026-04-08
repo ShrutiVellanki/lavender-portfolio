@@ -107,9 +107,9 @@ export default function Crossword() {
   const [dir, setDir] = useState<Direction>("across");
   const [solved, setSolved] = useState(false);
   const [taunt, setTaunt] = useState<{ key: string; id: number } | null>(null);
-  const tauntTimer = useRef<ReturnType<typeof setTimeout>>();
+  const tauntTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [cheer, setCheer] = useState<number | null>(null);
-  const cheerTimer = useRef<ReturnType<typeof setTimeout>>();
+  const cheerTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const gridRef = useRef<HTMLDivElement>(null);
 
   /* Derived: active word & its cells */
