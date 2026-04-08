@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Sun, Moon } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 
 /* ─── Puzzle definition ─── */
 
@@ -17,34 +16,39 @@ interface PuzzleWord {
 }
 
 /*
-  Grid layout (6 × 7):
+  Grid layout (8 × 13):
 
-       0  1  2  3  4  5  6
-   0: [1]M  U  S  T  A [2]F  A       ← 1-Across: MUSTAFA
-   1:  A  ·  · [3]L  ·  U  ·       ← 1-Down: MAN, 3-Down: LOVE
-   2:  N  · [4]L  O  ·  N  ·       ← 4-Down: LOVE
-   3:  ·  ·  O  V  ·  N  ·
-   4: [5]L  O  V  E  ·  Y  ·       ← 5-Across: LOVE
-   5:  ·  ·  E  ·  ·  ·  ·
+       0  1  2  3  4  5  6  7  8  9  10 11 12
+   0:  ·  ·  ·  ·  ·  · [1]A  M  A  Z  E  ·  ·  ← 1-Across: AMAZE & 1-Down: AMAZE
+   1:  ·  ·  ·  ·  ·  ·  M  ·  ·  ·  ·  ·  ·
+   2: [2]M  U  U  U  S  T  A  A  A [3]F  A  A  A  ← 2-Across: MUUUSTAAAFAAA, 2-Down: MAN, 3-Down: FUNNY
+   3:  A  ·  ·  ·  ·  ·  Z  ·  ·  U  ·  ·  ·
+   4:  N  ·  · [4]L  O  V  E  ·  ·  N  ·  ·  ·  ← 4-Across: LOVE & 4-Down: LOVE
+   5:  ·  ·  ·  O  ·  ·  ·  ·  ·  N  ·  ·  ·
+   6:  ·  ·  ·  V  ·  ·  ·  ·  ·  Y  ·  ·  ·
+   7:  ·  ·  ·  E  ·  ·  ·  ·  ·  ·  ·  ·  ·
 
   Intersections:
-    (0,0) M — shared by 1-Across & 1-Down
-    (0,5) F — shared by 1-Across & 2-Down
-    (4,2) V — shared by 5-Across & 4-Down
-    (4,3) E — shared by 5-Across & 3-Down
+    (0,6) A — AMAZE #1 down ∩ AMAZE #2 across
+    (2,0) M — MUUUSTAAAFAAA across ∩ MAN down
+    (2,6) A — MUUUSTAAAFAAA across ∩ AMAZE #1 down
+    (2,9) F — MUUUSTAAAFAAA across ∩ FUNNY down
+    (4,3) L — LOVE #1 across ∩ LOVE #2 down
+    (4,6) E — LOVE #1 across ∩ AMAZE #1 down
 */
 
 const WORDS: PuzzleWord[] = [
-  { id: "1A", number: 1, direction: "across", answer: "MUSTAFA", clue: "The chosen one — or the funniest guy in the room", startRow: 0, startCol: 0 },
-  { id: "5A", number: 5, direction: "across", answer: "LOVE",    clue: "All you need, per the Beatles", startRow: 4, startCol: 0 },
-  { id: "1D", number: 1, direction: "down",   answer: "MAN",     clue: "Spider-___", startRow: 0, startCol: 0 },
-  { id: "2D", number: 2, direction: "down",   answer: "FUNNY",   clue: "The kind of bone that makes you laugh", startRow: 0, startCol: 5 },
-  { id: "3D", number: 3, direction: "down",   answer: "LOVE",    clue: "Zero, in tennis", startRow: 1, startCol: 3 },
-  { id: "4D", number: 4, direction: "down",   answer: "LOVE",    clue: "Rhymes with dove", startRow: 2, startCol: 2 },
+  { id: "1A", number: 1, direction: "across", answer: "AMAZE",         clue: "What a great magic trick does to its audience", startRow: 0, startCol: 6 },
+  { id: "2A", number: 2, direction: "across", answer: "MUUUSTAAAFAAA", clue: "We meet again…", startRow: 2, startCol: 0 },
+  { id: "4A", number: 4, direction: "across", answer: "LOVE",          clue: "All you need, per the Beatles", startRow: 4, startCol: 3 },
+  { id: "1D", number: 1, direction: "down",   answer: "AMAZE",         clue: "To fill with wonder or astonishment", startRow: 0, startCol: 6 },
+  { id: "2D", number: 2, direction: "down",   answer: "MAN",           clue: "Spider-___", startRow: 2, startCol: 0 },
+  { id: "3D", number: 3, direction: "down",   answer: "FUNNY",         clue: "The kind of bone that makes you laugh", startRow: 2, startCol: 9 },
+  { id: "4D", number: 4, direction: "down",   answer: "LOVE",          clue: "Rhymes with dove and above", startRow: 4, startCol: 3 },
 ];
 
-const ROWS = 6;
-const COLS = 7;
+const ROWS = 8;
+const COLS = 13;
 
 /* ─── Grid builder ─── */
 
@@ -102,6 +106,10 @@ export default function Crossword() {
   const [sel, setSel] = useState<string | null>(null);
   const [dir, setDir] = useState<Direction>("across");
   const [solved, setSolved] = useState(false);
+  const [taunt, setTaunt] = useState<{ key: string; id: number } | null>(null);
+  const tauntTimer = useRef<ReturnType<typeof setTimeout>>();
+  const [cheer, setCheer] = useState<number | null>(null);
+  const cheerTimer = useRef<ReturnType<typeof setTimeout>>();
   const gridRef = useRef<HTMLDivElement>(null);
 
   /* Derived: active word & its cells */
@@ -128,6 +136,19 @@ export default function Crossword() {
         size: 18 + Math.random() * 28,
         dur: 4 + Math.random() * 5,
         delay: Math.random() * 4,
+      })),
+    [],
+  );
+
+  /* Ambient falling hearts */
+  const fallingHearts = useMemo(
+    () =>
+      Array.from({ length: 18 }, () => ({
+        left: Math.random() * 100,
+        size: 10 + Math.random() * 16,
+        dur: 6 + Math.random() * 8,
+        delay: Math.random() * 10,
+        opacity: 0.15 + Math.random() * 0.25,
       })),
     [],
   );
@@ -243,11 +264,30 @@ export default function Crossword() {
       /* Letter entry */
       if (/^[a-zA-Z]$/.test(e.key)) {
         e.preventDefault();
-        const next = { ...input, [sel]: e.key.toUpperCase() };
+        const typed = e.key.toUpperCase();
+        const next = { ...input, [sel]: typed };
         setInput(next);
+
+        const correct = CELL_MAP.get(sel)?.letter;
+        if (correct && typed !== correct) {
+          clearTimeout(tauntTimer.current);
+          clearTimeout(cheerTimer.current);
+          setCheer(null);
+          setTaunt({ key: sel, id: Date.now() });
+          tauntTimer.current = setTimeout(() => setTaunt(null), 1600);
+        } else if (correct && typed === correct) {
+          clearTimeout(cheerTimer.current);
+          clearTimeout(tauntTimer.current);
+          setTaunt(null);
+          setCheer(Date.now());
+          cheerTimer.current = setTimeout(() => setCheer(null), 1200);
+        }
+
         if (isSolved(next)) {
           setSolved(true);
           setSel(null);
+          setTaunt(null);
+          setCheer(null);
         } else {
           const n = adjacent(sel, dir, true);
           if (n) setSel(n);
@@ -267,12 +307,7 @@ export default function Crossword() {
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-lg bg-lavender-50/70 dark:bg-lavender-900/70 border-b border-lavender-300/30 dark:border-lavender-700/10">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-lavender-500 hover:text-iris dark:hover:text-iris-light transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Portfolio
-          </Link>
+          <div />
           <button
             onClick={() => setDark((d) => !d)}
             className="p-2 rounded-lg text-lavender-400 hover:text-lavender-700 dark:hover:text-lavender-100 transition-colors"
@@ -283,25 +318,53 @@ export default function Crossword() {
         </div>
       </nav>
 
-      <main className="pt-24 pb-20 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
+      {/* Ambient falling hearts */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden>
+        {fallingHearts.map((h, i) => (
+          <span
+            key={i}
+            className="absolute cw-fall text-pink-400 dark:text-pink-300"
+            style={{
+              left: `${h.left}%`,
+              top: 0,
+              fontSize: h.size,
+              opacity: h.opacity,
+              ["--fall-dur" as string]: `${h.dur}s`,
+              ["--fall-delay" as string]: `${h.delay}s`,
+            }}
+          >
+            ♥
+          </span>
+        ))}
+      </div>
+
+      <main className="relative z-10 pt-16 sm:pt-24 pb-12 sm:pb-20 px-3 sm:px-6">
+        <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <span className="sec-num text-lavender-400 dark:text-lavender-600 block mb-2">
               Puzzle
             </span>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.03em] text-lavender-700 dark:text-lavender-100">
-              Crossword
+              <span className="line-through opacity-50 mr-1">Monday</span> Love Crossword <span className="text-pink-400 dark:text-pink-300">♥</span>
             </h1>
             <p className="mt-3 text-sm text-lavender-500 dark:text-lavender-500">
-              Solve every clue to reveal a secret message
+              Solve every clue to reveal a{" "}
+              <span className="relative group inline-block">
+                <span className="text-pink-500 dark:text-pink-400 font-semibold bg-pink-100/60 dark:bg-pink-500/15 px-1.5 py-0.5 rounded-md cursor-default">
+                  flirty message
+                </span>
+                <span className="pointer-events-none absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-lavender-800 dark:bg-lavender-200 text-white dark:text-lavender-900 text-xs px-2.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  from shootz
+                </span>
+              </span>
             </p>
           </div>
 
           {/* Active clue banner */}
           {activeWord && !solved && (
-            <div className="max-w-xl mx-auto mb-6 px-4 py-3 rounded-xl bg-iris/8 dark:bg-iris-light/8 border border-iris/20 dark:border-iris-light/15 text-sm">
-              <span className="font-bold text-iris dark:text-iris-light mr-2">
+            <div className="max-w-xl mx-auto mb-4 sm:mb-6 px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-pink-100/60 dark:bg-pink-500/10 border border-pink-300/40 dark:border-pink-400/20 text-xs sm:text-sm">
+              <span className="font-bold text-pink-500 dark:text-pink-400 mr-2">
                 {activeWord.number}
                 {activeWord.direction === "across" ? "-Across" : "-Down"}
               </span>
@@ -312,19 +375,19 @@ export default function Crossword() {
           )}
 
           {/* Grid + Clues */}
-          <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
+          <div className="flex flex-col items-center gap-8">
             {/* Grid */}
             <div
               ref={gridRef}
               tabIndex={0}
               onKeyDown={handleKeyDown}
-              className="outline-none rounded-xl focus-visible:ring-2 focus-visible:ring-iris/40 dark:focus-visible:ring-iris-light/30"
+              className="relative w-full outline-none rounded-xl focus-visible:ring-2 focus-visible:ring-iris/40 dark:focus-visible:ring-iris-light/30"
             >
               <div
-                className="inline-grid gap-[2px] bg-lavender-600 dark:bg-lavender-400/25 rounded-xl overflow-hidden p-[2px]"
+                className="grid gap-[2px] bg-lavender-700 dark:bg-lavender-950 rounded-xl overflow-hidden p-[2px] mx-auto w-full"
                 style={{
-                  gridTemplateColumns: `repeat(${COLS}, minmax(0,1fr))`,
-                  width: `min(100%, ${COLS * 50 + (COLS + 1) * 2}px)`,
+                  gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
+                  maxWidth: `${COLS * 80 + (COLS + 1) * 2}px`,
                 }}
               >
                 {Array.from({ length: ROWS * COLS }, (_, i) => {
@@ -337,7 +400,7 @@ export default function Crossword() {
                     return (
                       <div
                         key={k}
-                        className="aspect-square bg-lavender-600 dark:bg-lavender-700/80"
+                        className="aspect-square bg-lavender-700 dark:bg-lavender-950"
                       />
                     );
                   }
@@ -345,6 +408,7 @@ export default function Crossword() {
                   const isSel = sel === k;
                   const isInWord = activeCellSet.has(k);
                   const letter = input[k] || "";
+                  const isWrong = taunt?.key === k;
 
                   return (
                     <div
@@ -352,20 +416,21 @@ export default function Crossword() {
                       onClick={() => handleCellClick(k)}
                       className={[
                         "aspect-square relative flex items-center justify-center cursor-pointer select-none transition-colors duration-100",
+                        isWrong ? "cw-shake" : "",
                         isSel
-                          ? "bg-iris/25 dark:bg-iris-light/25"
+                          ? "bg-gold/30 dark:bg-gold-light/25 ring-2 ring-inset ring-gold/60 dark:ring-gold-light/50"
                           : isInWord
-                            ? "bg-iris/8 dark:bg-iris-light/8"
+                            ? "bg-pink-200/60 dark:bg-pink-300/25 ring-1 ring-inset ring-pink-400/50 dark:ring-pink-300/40"
                             : "bg-white dark:bg-lavender-900",
                       ].join(" ")}
                     >
                       {cell.number != null && (
-                        <span className="absolute top-[2px] left-[3px] text-[9px] sm:text-[10px] font-bold leading-none text-lavender-400 dark:text-lavender-500 pointer-events-none">
+                        <span className="absolute top-[2px] left-[2px] sm:top-[4px] sm:left-[5px] text-[8px] sm:text-xs md:text-sm font-bold leading-none text-lavender-400 dark:text-lavender-500 pointer-events-none">
                           {cell.number}
                         </span>
                       )}
                       <span
-                        className={`text-base sm:text-lg font-bold pointer-events-none ${
+                        className={`text-sm sm:text-xl md:text-2xl lg:text-3xl font-bold pointer-events-none ${
                           solved
                             ? "text-iris dark:text-iris-light"
                             : "text-lavender-700 dark:text-lavender-100"
@@ -378,13 +443,45 @@ export default function Crossword() {
                 })}
               </div>
 
+              {/* Taunt overlay on grid */}
+              {taunt && (
+                <div key={taunt.id} className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none cw-taunt-in">
+                  <div className="w-[65%] max-h-[75%] flex flex-col items-center justify-center bg-white/90 dark:bg-lavender-900/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                    <img
+                      src="/taunt.png"
+                      alt=""
+                      className="w-3/5 max-w-56 aspect-square object-contain rounded-2xl"
+                    />
+                    <span className="mt-4 text-xl sm:text-2xl font-bold text-love dark:text-love-light tracking-wide">
+                      nope!
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Cheer overlay on grid (correct letter) */}
+              {cheer && !solved && (
+                <div key={cheer} className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none cw-taunt-in">
+                  <div className="w-[65%] max-h-[75%] flex flex-col items-center justify-center bg-white/90 dark:bg-lavender-900/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl">
+                    <img
+                      src="/victory.png"
+                      alt=""
+                      className="w-3/5 max-w-56 aspect-square object-contain rounded-2xl"
+                    />
+                    <span className="mt-4 text-xl sm:text-2xl font-bold text-pink-500 dark:text-pink-400 tracking-wide">
+                      yes!
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <p className="mt-3 text-center text-[11px] text-lavender-400 dark:text-lavender-600">
                 Click a cell to start · click again to switch direction
               </p>
             </div>
 
             {/* Clues */}
-            <div className="w-full lg:w-64 space-y-6">
+            <div className="w-full max-w-lg grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 { label: "Across", words: across },
                 { label: "Down", words: down },
@@ -403,7 +500,7 @@ export default function Crossword() {
                           className={[
                             "text-sm cursor-pointer px-3 py-2 rounded-lg transition-colors",
                             isActive
-                              ? "bg-iris/10 dark:bg-iris-light/10 text-lavender-700 dark:text-lavender-200"
+                              ? "bg-pink-100/60 dark:bg-pink-500/10 text-pink-600 dark:text-pink-300"
                               : "text-lavender-600 dark:text-lavender-400 hover:bg-lavender-100 dark:hover:bg-lavender-800/40",
                           ].join(" ")}
                         >
@@ -443,18 +540,24 @@ export default function Crossword() {
           ))}
 
           <div className="relative z-10 text-center px-6 cw-msg">
+            <img
+              src="/victory.png"
+              alt=""
+              className="mx-auto w-40 h-40 sm:w-52 sm:h-52 object-contain rounded-3xl mb-6"
+            />
             <p className="text-lavender-400 dark:text-lavender-500 text-base sm:text-lg mb-6 tracking-wide font-medium">
               You solved it!
             </p>
-            <h2 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-[-0.03em] leading-[1.1] text-white">
-              funny man
-              <br />
-              mustafa
-            </h2>
-            <p className="mt-4 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.02em] text-love dark:text-love-light">
-              love love love
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-[-0.02em] text-white/80 mb-2">
+              funny man mustafa
             </p>
-            <div className="mt-12 flex flex-col sm:flex-row justify-center gap-3">
+            <h2 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-[-0.03em] leading-[1.1] text-love dark:text-love-light">
+              love love
+            </h2>
+            <p className="mt-4 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-[-0.02em] text-white">
+              amaze amaze
+            </p>
+            <div className="mt-12 flex justify-center">
               <button
                 onClick={() => {
                   setSolved(false);
@@ -465,12 +568,6 @@ export default function Crossword() {
               >
                 Play Again
               </button>
-              <Link
-                to="/"
-                className="px-6 py-2.5 rounded-full text-sm font-semibold bg-iris text-white hover:bg-iris/80 transition-colors"
-              >
-                Back to Portfolio
-              </Link>
             </div>
           </div>
         </div>

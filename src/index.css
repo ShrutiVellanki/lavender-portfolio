@@ -129,9 +129,33 @@ body {
   80% { opacity: 0.5; }
   100% { transform: translateY(-110vh) rotate(25deg); opacity: 0; }
 }
+@keyframes cwShake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-4px); }
+  30% { transform: translateX(4px); }
+  45% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+@keyframes cwTauntIn {
+  0% { opacity: 0; transform: scale(0.7) translateY(8px); }
+  40% { opacity: 1; transform: scale(1.05) translateY(0); }
+  60% { transform: scale(0.97); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes cwFall {
+  0% { transform: translateY(-5%) rotate(0deg); opacity: 0; }
+  5% { opacity: 1; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(105vh) rotate(35deg); opacity: 0; }
+}
 .cw-fade-in { animation: cwFadeIn 0.5s ease-out both; }
 .cw-msg { animation: cwMsg 0.7s cubic-bezier(0.19, 1, 0.22, 1) 0.3s both; }
 .cw-heart { animation: cwHeart 5s ease-out infinite; }
+.cw-fall { animation: cwFall var(--fall-dur, 8s) linear var(--fall-delay, 0s) infinite; }
+.cw-shake { animation: cwShake 0.4s ease-out; }
+.cw-taunt-in { animation: cwTauntIn 0.35s cubic-bezier(0.19, 1, 0.22, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
   .rv, .sg > *, .hero-in > * {
@@ -148,7 +172,7 @@ body {
     transform: none !important;
     animation: none !important;
   }
-  .cw-fade-in, .cw-msg, .cw-heart {
+  .cw-fade-in, .cw-msg, .cw-heart, .cw-fall, .cw-shake, .cw-taunt-in {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
