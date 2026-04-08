@@ -384,7 +384,7 @@ export default function Crossword() {
               className="relative w-full outline-none rounded-xl focus-visible:ring-2 focus-visible:ring-iris/40 dark:focus-visible:ring-iris-light/30"
             >
               <div
-                className="grid gap-[2px] bg-lavender-700 dark:bg-lavender-950 rounded-xl overflow-hidden p-[2px] mx-auto w-full"
+                className="grid gap-[2px] bg-lavender-700 dark:bg-black rounded-xl overflow-hidden p-[2px] mx-auto w-full"
                 style={{
                   gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
                   maxWidth: `${COLS * 80 + (COLS + 1) * 2}px`,
@@ -400,7 +400,7 @@ export default function Crossword() {
                     return (
                       <div
                         key={k}
-                        className="aspect-square bg-lavender-700 dark:bg-lavender-950"
+                        className="aspect-square bg-lavender-700 dark:bg-lavender-800/60"
                       />
                     );
                   }
@@ -418,14 +418,14 @@ export default function Crossword() {
                         "aspect-square relative flex items-center justify-center cursor-pointer select-none transition-colors duration-100",
                         isWrong ? "cw-shake" : "",
                         isSel
-                          ? "bg-gold/30 dark:bg-gold-light/25 ring-2 ring-inset ring-gold/60 dark:ring-gold-light/50"
+                          ? "bg-gold/30 dark:bg-gold-light/40 ring-2 ring-inset ring-gold/60 dark:ring-gold-light/60"
                           : isInWord
-                            ? "bg-pink-200/60 dark:bg-pink-300/25 ring-1 ring-inset ring-pink-400/50 dark:ring-pink-300/40"
-                            : "bg-white dark:bg-lavender-900",
+                            ? "bg-pink-200/60 dark:bg-pink-400/35 ring-1 ring-inset ring-pink-400/50 dark:ring-pink-400/50"
+                            : "bg-white dark:bg-lavender-500/50",
                       ].join(" ")}
                     >
                       {cell.number != null && (
-                        <span className="absolute top-[2px] left-[2px] sm:top-[4px] sm:left-[5px] text-[8px] sm:text-xs md:text-sm font-bold leading-none text-lavender-400 dark:text-lavender-500 pointer-events-none">
+                        <span className="absolute top-[2px] left-[2px] sm:top-[4px] sm:left-[5px] text-[8px] sm:text-xs md:text-sm font-bold leading-none text-lavender-400 dark:text-lavender-300 pointer-events-none">
                           {cell.number}
                         </span>
                       )}
