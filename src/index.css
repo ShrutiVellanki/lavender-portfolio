@@ -37,6 +37,11 @@ html {
   font-size: 125%;
 }
 
+/* Smaller base on mobile — desktop's 125% is too tight on narrow viewports */
+@media (max-width: 768px) {
+  html { font-size: 108%; }
+}
+
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
