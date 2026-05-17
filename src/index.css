@@ -91,6 +91,7 @@ body {
 .hero-in > *:nth-child(2) { animation-delay: 0.28s; }
 .hero-in > *:nth-child(3) { animation-delay: 0.42s; }
 .hero-in > *:nth-child(4) { animation-delay: 0.56s; }
+.hero-in > *:nth-child(5) { animation-delay: 0.7s; }
 @keyframes up { to { opacity: 1; transform: translateY(0); } }
 
 /* ── Card ── */
@@ -109,7 +110,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Repeating geometric background (subtle accent on top of the shader) ── */
 .geo-bg::before {
   content: "";
   position: fixed;

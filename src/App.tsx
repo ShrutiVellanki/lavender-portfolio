@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import {
   Sun, Moon, Mail, ExternalLink, ArrowUp, Code2, Palette,
-  BarChart3, Globe, Briefcase, Mic, Menu, X, Coffee, User, Wrench,
+  BarChart3, Globe, Briefcase, Mic, Menu, X, Coffee, Hand, Wrench,
   ShieldCheck, CalendarCog, Megaphone,
 } from "lucide-react";
 import ShaderBackground from "./components/ShaderBackground";
+import { ProjectPreview, type PreviewKey } from "./components/ProjectPreview";
 
 /* ─── Icons ─── */
 
@@ -82,7 +83,7 @@ function useReveal() {
 /* ─── Data ─── */
 
 const SECTIONS = [
-  { id: "about", label: "About", num: "01", icon: <User className="w-3.5 h-3.5" /> },
+  { id: "about", label: "About", num: "01", icon: <Hand className="w-3.5 h-3.5 shrink-0 -scale-x-100 -rotate-[22deg] origin-[56%_90%]" aria-hidden="true" /> },
   { id: "skills", label: "Skills", num: "02", icon: <Wrench className="w-3.5 h-3.5" /> },
   { id: "experience", label: "Experience", num: "03", icon: <Briefcase className="w-3.5 h-3.5" /> },
   { id: "projects", label: "Projects", num: "04", icon: <Code2 className="w-3.5 h-3.5" /> },
@@ -165,7 +166,18 @@ const EXPERIENCE: ExperienceEntry[] = [
   },
 ];
 
-const PROJECTS = [
+type ProjectEntry = {
+  title: string;
+  description: string;
+  tags: string[];
+  github: string;
+  live?: string;
+  icon: React.ReactNode;
+  accent: "iris" | "foam" | "gold" | "love" | "pine" | "rose";
+  preview: PreviewKey;
+};
+
+const PROJECTS: ProjectEntry[] = [
   {
     title: "Lavender Finance",
     description:
@@ -174,7 +186,8 @@ const PROJECTS = [
     github: "https://github.com/ShrutiVellanki/lavender-finance",
     live: "https://lavender-finance.vercel.app",
     icon: <BarChart3 className="w-5 h-5" />,
-    accent: "foam" as const,
+    accent: "foam",
+    preview: "finance",
   },
   {
     title: "Lavender Storybook",
@@ -184,7 +197,8 @@ const PROJECTS = [
     github: "https://github.com/ShrutiVellanki/lavender-storybook",
     live: "https://lavender-storybook.vercel.app",
     icon: <Palette className="w-5 h-5" />,
-    accent: "iris" as const,
+    accent: "iris",
+    preview: "storybook",
   },
   {
     title: "Recipe Extraction Demo",
@@ -193,7 +207,8 @@ const PROJECTS = [
     tags: ["Python", "LangChain", "GPT-5", "PyMuPDF"],
     github: "https://github.com/ShrutiVellanki/recipe-extraction-demo",
     icon: <Code2 className="w-5 h-5" />,
-    accent: "gold" as const,
+    accent: "gold",
+    preview: "recipe",
   },
 ];
 
@@ -271,14 +286,15 @@ export default function App() {
 
       {/* ── Nav ── */}
       <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-lg bg-lavender-50/70 dark:bg-lavender-900/70 border-b border-lavender-300/30 dark:border-lavender-700/10">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="px-6 sm:px-10">
+          <div className="max-w-6xl mx-auto h-14 flex items-center justify-between">
           <a href="#" className="text-[15px] font-bold tracking-[-0.02em] text-lavender-700 dark:text-lavender-100 hover:text-iris dark:hover:text-iris-light transition-colors">
             Shruti Vellanki
           </a>
 
           <div className="flex items-center gap-1">
             {/* Desktop nav */}
-            <ul className="hidden md:flex items-center">
+            <ul className="hidden lg:flex items-center">
               {SECTIONS.filter(s => s.id !== "contact").map((s) => (
                 <li key={s.id}>
                   <a
@@ -298,7 +314,7 @@ export default function App() {
               ))}
             </ul>
 
-            <a href="#contact" className="hidden md:inline-flex items-center gap-1.5 ml-4 px-4 py-1.5 text-[13px] font-semibold rounded-full bg-lavender-700 dark:bg-lavender-100 text-white dark:text-lavender-900 hover:bg-lavender-800 dark:hover:bg-white transition-colors">
+            <a href="#contact" className="hidden lg:inline-flex items-center gap-1.5 ml-4 px-4 py-1.5 text-[13px] font-semibold rounded-full bg-lavender-700 dark:bg-lavender-100 text-white dark:text-lavender-900 hover:bg-lavender-800 dark:hover:bg-white transition-colors">
               <Coffee className="w-3.5 h-3.5" /> Get in Touch
             </a>
 
@@ -306,21 +322,24 @@ export default function App() {
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            <button onClick={() => setMobileNav(!mobileNav)} className="md:hidden p-2 rounded-lg text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200 transition-colors" aria-label="Toggle menu">
+            <button onClick={() => setMobileNav(!mobileNav)} className="lg:hidden p-2 rounded-lg text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200 transition-colors" aria-label="Toggle menu">
               {mobileNav ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
+          </div>
           </div>
         </div>
 
         {/* Mobile dropdown */}
         {mobileNav && (
-          <div className="md:hidden border-t border-lavender-300/30 dark:border-lavender-700/10 bg-lavender-50/95 dark:bg-lavender-900/95 backdrop-blur-lg">
-            <div className="px-6 py-5 space-y-4">
+          <div className="lg:hidden border-t border-lavender-300/30 dark:border-lavender-700/10 bg-lavender-50/95 dark:bg-lavender-900/95 backdrop-blur-lg">
+            <div className="px-6 sm:px-10">
+              <div className="max-w-6xl mx-auto py-5 space-y-4">
               {SECTIONS.map((s) => (
                 <a key={s.id} href={`#${s.id}`} onClick={() => setMobileNav(false)} className={`flex items-center gap-2 text-sm font-medium transition-colors ${active === s.id ? "text-iris dark:text-iris-light" : "text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200"}`}>
                   <span className="sec-num text-lavender-400 dark:text-lavender-600">{s.num}</span>{s.icon} {s.label}
                 </a>
               ))}
+              </div>
             </div>
           </div>
         )}
@@ -328,21 +347,24 @@ export default function App() {
 
       <main>
         {/* ══════════════ HERO ══════════════ */}
-        <section className="relative pt-32 pb-20 sm:pt-44 sm:pb-28 px-6 sm:px-10">
+        <section id="about" className="relative pt-32 pb-20 sm:pt-44 sm:pb-28 px-6 sm:px-10 bg-lavender-100/45 dark:bg-lavender-950/40 backdrop-blur-md">
           {/* soft radial halo behind hero text — invisible card, real contrast */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 [background:radial-gradient(75%_65%_at_30%_50%,rgba(250,250,252,0.78),rgba(250,250,252,0.30)_55%,transparent_80%)] dark:[background:radial-gradient(75%_65%_at_30%_50%,rgba(26,24,48,0.85),rgba(26,24,48,0.35)_55%,transparent_80%)]"
           />
           <div className="relative max-w-6xl mx-auto hero-in">
+            <span className="sec-num text-lavender-500 dark:text-lavender-400 block mb-2 [text-shadow:0_1px_14px_rgba(250,250,252,0.7)] dark:[text-shadow:0_1px_14px_rgba(26,24,48,0.8)]">
+              01
+            </span>
             <p className="sec-num text-iris dark:text-iris-light mb-6 [text-shadow:0_1px_22px_rgba(250,250,252,0.85),0_0_2px_rgba(250,250,252,0.6)] dark:[text-shadow:0_1px_22px_rgba(26,24,48,0.9),0_0_2px_rgba(26,24,48,0.7)]">
-              Software Engineer
+              Product Engineer
             </p>
             <h1 className="text-[clamp(2.8rem,8vw,6rem)] font-extrabold tracking-[-0.04em] leading-[0.95] text-lavender-800 dark:text-lavender-50 [text-shadow:0_2px_36px_rgba(250,250,252,0.85),0_0_3px_rgba(250,250,252,0.5)] dark:[text-shadow:0_2px_36px_rgba(26,24,48,0.95),0_0_3px_rgba(26,24,48,0.7)]">
               Shruti<br />Vellanki
             </h1>
             <p className="mt-8 max-w-lg text-lg text-lavender-800 dark:text-lavender-50 leading-relaxed font-medium [text-shadow:0_1px_24px_rgba(250,250,252,0.9),0_0_2px_rgba(250,250,252,0.6)] dark:[text-shadow:0_1px_24px_rgba(26,24,48,0.95),0_0_2px_rgba(26,24,48,0.7)]">
-              Building systems under pressure — frontend applications and design systems serving 50M+ users.
+              Hi, I&apos;m Shruti — a product engineer focused on great UX, platform UI, and AI-powered features.
             </p>
             <div className="mt-10 flex items-center gap-5">
               {SOCIALS.map((s) => (
@@ -360,18 +382,6 @@ export default function App() {
             </div>
           </div>
         </section>
-
-        {/* ══════════════ ABOUT ══════════════ */}
-        <Section id="about" num="01" title="About" icon={<User className="w-8 h-8" />} alt>
-          <div className="max-w-2xl text-base leading-[1.85] text-lavender-600 dark:text-lavender-400">
-            <p>
-              Software Engineer with <strong className="font-semibold text-lavender-700 dark:text-lavender-200">5+ years</strong> building + owning <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Dark Web Monitoring</strong> features for <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Norton™ 360</strong> and <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Avast</strong> on a global remote team at <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Gen</strong> — delivering Organic Upsell initiatives to <strong className="font-semibold text-lavender-700 dark:text-lavender-200">50M+ users</strong>.
-            </p>
-            <p className="mt-5">
-              Past work spans <strong className="font-semibold text-lavender-700 dark:text-lavender-200">frontend engineering</strong> and <strong className="font-semibold text-lavender-700 dark:text-lavender-200">internal tooling</strong> for <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Interac Verified</strong> (now acquired by Interac), where I led development on the <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Interac Verified Design System</strong>, plus calendar features at <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Fiix by Rockwell Automation</strong> and accessibility-first work at <strong className="font-semibold text-lavender-700 dark:text-lavender-200">Veriday</strong>.
-            </p>
-          </div>
-        </Section>
 
         {/* ══════════════ SKILLS ══════════════ */}
         <Section id="skills" num="02" title="Skills" icon={<Wrench className="w-8 h-8" />}>
@@ -444,30 +454,39 @@ export default function App() {
 
         {/* ══════════════ PROJECTS ══════════════ */}
         <Section id="projects" num="04" title="Projects" icon={<Code2 className="w-8 h-8" />}>
-          <div className="grid md:grid-cols-3 gap-5 sg">
+          <div className="grid lg:grid-cols-3 gap-5 sg">
             {PROJECTS.map((p) => {
               const ac = A[p.accent];
               return (
-                <div key={p.title} className="card group flex flex-col rounded-2xl bg-white/85 dark:bg-lavender-950/70 backdrop-blur-md border border-lavender-200 dark:border-lavender-700/15 p-7 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg}`}>{p.icon}</span>
-                    <h3 className="text-base font-bold text-lavender-700 dark:text-lavender-100">{p.title}</h3>
+                <div key={p.title} className="card group flex flex-col rounded-2xl overflow-hidden bg-white/85 dark:bg-lavender-950/70 backdrop-blur-md border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
+                  {/* preview — inset frame reads clearly on light cards */}
+                  <div className="relative mx-3 mt-3 aspect-[16/10] shrink-0 overflow-hidden rounded-xl border border-lavender-400/55 bg-lavender-100/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.45)] dark:border-lavender-600/40 dark:bg-lavender-900/60 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+                    <ProjectPreview kind={p.preview} accent={p.accent} className="absolute inset-0 w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/15 dark:from-lavender-950/30 to-transparent" />
                   </div>
-                  <p className="text-sm text-lavender-600 dark:text-lavender-400 leading-relaxed mb-4">{p.description}</p>
-                  <div className="flex flex-wrap gap-1.5 mb-6">
-                    {p.tags.map((t) => (
-                      <span key={t} className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${ac.pill}`}>{t}</span>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-5 text-sm mt-auto pt-4 border-t border-lavender-200/60 dark:border-lavender-700/15">
-                    <a href={p.github} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-500 ${ac.hoverText} transition-colors`}>
-                      <GithubIcon className="w-4 h-4" /> Code
-                    </a>
-                    {p.live && (
-                      <a href={p.live} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-500 ${ac.hoverText} transition-colors`}>
-                        <ExternalLink className="w-4 h-4" /> Live
+
+                  {/* content */}
+                  <div className="flex flex-col flex-1 p-6 pt-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className={`${ac.text} p-2 rounded-lg ${ac.bg}`}>{p.icon}</span>
+                      <h3 className="text-base font-bold text-lavender-700 dark:text-lavender-100">{p.title}</h3>
+                    </div>
+                    <p className="text-sm text-lavender-600 dark:text-lavender-400 leading-relaxed mb-4">{p.description}</p>
+                    <div className="flex flex-wrap gap-1.5 mb-6">
+                      {p.tags.map((t) => (
+                        <span key={t} className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${ac.pill}`}>{t}</span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-5 text-sm mt-auto pt-4 border-t border-lavender-200/60 dark:border-lavender-700/15">
+                      <a href={p.github} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-500 ${ac.hoverText} transition-colors`}>
+                        <GithubIcon className="w-4 h-4" /> Code
                       </a>
-                    )}
+                      {p.live && (
+                        <a href={p.live} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-500 ${ac.hoverText} transition-colors`}>
+                          <ExternalLink className="w-4 h-4" /> Live
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -530,7 +549,7 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="relative py-10 px-6 border-t border-lavender-300/70 dark:border-lavender-700/40 bg-lavender-100/45 dark:bg-lavender-950/40 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-lavender-700 dark:text-lavender-200">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4 text-xs font-medium text-lavender-700 dark:text-lavender-200">
           <span>&copy; {new Date().getFullYear()} Shruti Vellanki</span>
           <span>
             Built with{" "}

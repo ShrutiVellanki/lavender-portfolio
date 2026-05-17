@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Sun, Moon } from "lucide-react";
+import ShaderBackground from "../components/ShaderBackground";
 
 /* ─── Puzzle definition ─── */
 
@@ -303,7 +304,9 @@ export default function Crossword() {
   /* ─── Render ─── */
 
   return (
-    <div className="geo-bg min-h-screen bg-lavender-50 text-lavender-700 dark:bg-lavender-900 dark:text-lavender-300 transition-colors duration-500">
+    <>
+    <ShaderBackground dark={dark} />
+    <div className="geo-bg min-h-screen bg-lavender-50/10 dark:bg-lavender-900/20 text-lavender-700 dark:text-lavender-300 transition-colors duration-500">
       {/* Nav */}
       <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-lg bg-lavender-50/70 dark:bg-lavender-900/70 border-b border-lavender-300/30 dark:border-lavender-700/10">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -573,5 +576,6 @@ export default function Crossword() {
         </div>
       )}
     </div>
+    </>
   );
 }
