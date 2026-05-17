@@ -386,7 +386,7 @@ export default function App() {
                   </div>
                   <ul className="space-y-2">
                     {s.items.map((item) => (
-                      <li key={item} className="text-[13px] text-lavender-600 dark:text-lavender-400 leading-snug pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[7px] before:w-1 before:h-1 before:rounded-full before:bg-lavender-400 dark:before:bg-lavender-600">{item}</li>
+                      <li key={item} className="text-[15px] text-lavender-600 dark:text-lavender-400 leading-snug pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-1 before:h-1 before:rounded-full before:bg-lavender-400 dark:before:bg-lavender-600">{item}</li>
                     ))}
                   </ul>
                 </div>

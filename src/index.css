@@ -31,7 +31,11 @@
   --color-rose-light: #f0ada9;
 }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Render the page as if zoomed to 125% — scales every rem-based size */
+  font-size: 125%;
+}
 
 body {
   font-family: var(--font-sans);
