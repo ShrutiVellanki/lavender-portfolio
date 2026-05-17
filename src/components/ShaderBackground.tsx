@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Shader background: a slow flowing lavender aurora.
@@ -138,9 +138,63 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
   return sh;
 }
 
-export default function ShaderBackground({ dark }: { dark: boolean }) {
+/* Static fallback for mobile / touch / reduced-motion / no-WebGL.
+   Layered radial gradients in the same lavender palette as the shader. */
+const STATIC_LIGHT = [
+  "radial-gradient(70% 70% at 78% 18%, rgba(212,189,239,0.92), transparent 75%)",
+  "radial-gradient(60% 70% at 22% 55%, rgba(168,212,184,0.55), transparent 75%)",
+  "radial-gradient(55% 60% at 68% 82%, rgba(240,173,169,0.50), transparent 75%)",
+  "radial-gradient(40% 50% at 12% 12%, rgba(250,212,154,0.40), transparent 70%)",
+  "radial-gradient(45% 55% at 50% 50%, rgba(204,176,198,0.40), transparent 80%)",
+  "linear-gradient(140deg, #fafafc 0%, #f3f2f7 60%, #efeef5 100%)",
+].join(",");
+
+const STATIC_DARK = [
+  "radial-gradient(70% 70% at 78% 18%, rgba(144,122,169,0.85), transparent 75%)",
+  "radial-gradient(60% 70% at 22% 55%, rgba(110,154,130,0.45), transparent 75%)",
+  "radial-gradient(55% 60% at 68% 82%, rgba(180,99,122,0.55), transparent 75%)",
+  "radial-gradient(40% 50% at 12% 12%, rgba(234,157,52,0.25), transparent 70%)",
+  "radial-gradient(45% 55% at 50% 50%, rgba(133,107,128,0.40), transparent 80%)",
+  "linear-gradient(140deg, #1a1830 0%, #232136 60%, #2a2746 100%)",
+].join(",");
+
+/* Decide whether to skip WebGL entirely:
+   - small viewports (most phones)
+   - touch-only / no-hover devices (covers tablets too)
+   - reduced-motion preference */
+function useStaticFallback() {
+  const query = "(max-width: 768px), (hover: none) and (pointer: coarse), (prefers-reduced-motion: reduce)";
+  const [useStatic, setUseStatic] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia(query).matches;
+  });
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const handler = () => setUseStatic(mq.matches);
+    if (mq.addEventListener) mq.addEventListener("change", handler);
+    else mq.addListener(handler);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", handler);
+      else mq.removeListener(handler);
+    };
+  }, []);
+  return useStatic;
+}
+
+function StaticBackground({ dark }: { dark: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="fixed inset-0 -z-10 w-full h-full pointer-events-none transition-[background] duration-700"
+      style={{ background: dark ? STATIC_DARK : STATIC_LIGHT }}
+    />
+  );
+}
+
+function WebGLBackground({ dark }: { dark: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const darkRef = useRef(dark);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     darkRef.current = dark;
@@ -155,11 +209,17 @@ export default function ShaderBackground({ dark }: { dark: boolean }) {
     const gl =
       (canvas.getContext("webgl", { antialias: false, alpha: false, premultipliedAlpha: false }) as WebGLRenderingContext | null) ||
       (canvas.getContext("experimental-webgl") as WebGLRenderingContext | null);
-    if (!gl) return;
+    if (!gl) {
+      setFailed(true);
+      return;
+    }
 
     const vs = compile(gl, gl.VERTEX_SHADER, VERT);
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
-    if (!vs || !fs) return;
+    if (!vs || !fs) {
+      setFailed(true);
+      return;
+    }
 
     const program = gl.createProgram()!;
     gl.attachShader(program, vs);
@@ -167,9 +227,19 @@ export default function ShaderBackground({ dark }: { dark: boolean }) {
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.warn("program link failed:", gl.getProgramInfoLog(program));
+      setFailed(true);
       return;
     }
     gl.useProgram(program);
+
+    /* If the GPU loses the context (common on iOS Safari background/foreground
+       cycles), fall back to the static gradient instead of staring at a blank
+       canvas. */
+    const onContextLost = (e: Event) => {
+      e.preventDefault();
+      setFailed(true);
+    };
+    canvas.addEventListener("webglcontextlost", onContextLost);
 
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -251,12 +321,15 @@ export default function ShaderBackground({ dark }: { dark: boolean }) {
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("webglcontextlost", onContextLost);
       gl.deleteBuffer(buf);
       gl.deleteProgram(program);
       gl.deleteShader(vs);
       gl.deleteShader(fs);
     };
   }, []);
+
+  if (failed) return <StaticBackground dark={dark} />;
 
   return (
     <canvas
@@ -265,4 +338,9 @@ export default function ShaderBackground({ dark }: { dark: boolean }) {
       className="fixed inset-0 -z-10 w-full h-full pointer-events-none"
     />
   );
+}
+
+export default function ShaderBackground({ dark }: { dark: boolean }) {
+  const useStatic = useStaticFallback();
+  return useStatic ? <StaticBackground dark={dark} /> : <WebGLBackground dark={dark} />;
 }
