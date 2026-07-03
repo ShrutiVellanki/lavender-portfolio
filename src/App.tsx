@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Sun, Moon, Mail, ExternalLink, ArrowUp, Code2, Palette,
   BarChart3, Globe, Briefcase, Mic, Menu, X, Coffee, Hand, Wrench,
-  ShieldCheck, CalendarCog, Megaphone,
+  ShieldCheck, CalendarCog, Megaphone, Sparkles,
 } from "lucide-react";
 import ShaderBackground from "./components/ShaderBackground";
 import { ProjectPreview, type PreviewKey } from "./components/ProjectPreview";
@@ -115,6 +115,19 @@ type ExperienceEntry = {
 
 const EXPERIENCE: ExperienceEntry[] = [
   {
+    company: "Ascend",
+    accent: "love",
+    icon: <Sparkles className="w-4 h-4" />,
+    roles: [
+      {
+        title: "Product Engineer — AI Team",
+        period: "Jun 2026 – Present",
+        location: "Remote",
+        description: "",
+      },
+    ],
+  },
+  {
     company: "Gen",
     subtitle: "(NortonLifeLock & Avast)",
     accent: "iris",
@@ -122,7 +135,7 @@ const EXPERIENCE: ExperienceEntry[] = [
     roles: [
       {
         title: "Software Engineer — Windows UI",
-        period: "Jun 2025 – Present",
+        period: "Jun 2025 – Jun 2026",
         description:
           "Building + owning Dark Web Monitoring features for Norton™ 360 and Avast, delivering Organic Upsell initiatives on a global remote team. (50M+ users)",
         skills: ["Artificial Intelligence (AI)", "Anthropic Claude", "Svelte"],
