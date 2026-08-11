@@ -799,7 +799,7 @@ export default function App() {
 
         {/* ══════════════ TALKS ══════════════ */}
         <Section id="talks" title="Talks" alt>
-          <div className="grid lg:grid-cols-2 gap-5 sg lg:max-w-3xl">
+          <div className="grid gap-5 sg lg:max-w-3xl">
             {TALKS.map((talk) => {
               const ac = A[accent];
               return (
