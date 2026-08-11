@@ -446,10 +446,10 @@ function TokenModal({ accent, onAccentChange, radius, onRadiusChange, dark, onTo
   dark: boolean;
   onToggleTheme: () => void;
 }) {
-  // The playground auto-opens as a modal on load — a bottom sheet on small
-  // screens, a centered dialog on large ones — and a palette FAB re-opens
-  // it after dismissal. One state drives both presentations.
-  const [open, setOpen] = useState(true);
+  // The playground starts closed; the palette FAB opens it as a modal —
+  // a bottom sheet on small screens, a centered dialog on large ones.
+  // One state drives both presentations.
+  const [open, setOpen] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
 
