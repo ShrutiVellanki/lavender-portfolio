@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Sun, Moon, Mail, ExternalLink, ArrowUp, Code2, Palette,
   BarChart3, Globe, Mic, Menu, X,
-  ShieldCheck, CalendarCog, Megaphone, ChevronUp, ChevronDown,
+  ShieldCheck, CalendarCog, Megaphone,
 } from "lucide-react";
 import ShaderBackground from "./components/ShaderBackground";
 import { ProjectPreview, type PreviewKey } from "./components/ProjectPreview";
@@ -315,7 +315,6 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
   dark: boolean;
   onToggleTheme: () => void;
 }) {
-  const [switchOn, setSwitchOn] = useState(true);
   const t = TOKENS[accent];
   const hex = dark ? t.hexDark : t.hex;
   // Dark-theme accents are pastels (need ink text); light-theme gold/rose are too bright for white.
@@ -330,9 +329,11 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
         Change a token below and the whole page updates.
       </p>
 
+      {/* Two columns in the wide desktop dialog: controls left, specimen right */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       {/* Specimen */}
       <div
-        className="mt-5 border border-lavender-300/70 dark:border-lavender-700/30 bg-lavender-100/80 dark:bg-lavender-900/70 p-4 transition-[border-radius] duration-300"
+        className="mt-5 lg:order-2 border border-lavender-300/70 dark:border-lavender-700/30 bg-lavender-100/80 dark:bg-lavender-900/70 p-4 transition-[border-radius] duration-300"
         style={{ borderRadius: r + 6 }}
       >
         <div
@@ -342,14 +343,8 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
           <div className="flex items-center gap-2.5">
             <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: hex }} />
             <span className="text-[13px] font-bold text-lavender-700 dark:text-lavender-50">Lavender UI</span>
-            <span
-              className="ml-auto px-2 py-0.5 text-[10px] font-bold tracking-wide transition-colors duration-300"
-              style={{ borderRadius: 999, backgroundColor: hex + (dark ? "26" : "1f"), color: dark ? t.hexDark : t.inkHex }}
-            >
-              v2.0
-            </span>
           </div>
-          <div aria-hidden="true" className="mt-4 flex items-end gap-1.5 h-14">
+          <div aria-hidden="true" className="mt-4 flex items-end gap-1.5 h-16">
             {[0.45, 0.75, 0.55, 1, 0.65].map((h, i) => (
               <span
                 key={i}
@@ -358,42 +353,11 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
               />
             ))}
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              className="px-3.5 py-1.5 text-[13px] font-bold transition-[background-color,border-radius] duration-300"
-              style={{ borderRadius: r, backgroundColor: hex, color: btnInk }}
-            >
-              Primary
-            </button>
-            <button
-              type="button"
-              className="px-3.5 py-1.5 text-[13px] font-bold border transition-[color,border-color,border-radius] duration-300"
-              style={{ borderRadius: r, borderColor: dark ? t.hexDark : t.inkHex, color: dark ? t.hexDark : t.inkHex }}
-            >
-              Ghost
-            </button>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={switchOn}
-              aria-label="Specimen switch"
-              onClick={() => setSwitchOn(!switchOn)}
-              className="ml-auto relative w-10 h-[22px] border border-lavender-300 dark:border-lavender-700/40 transition-[background-color,border-radius] duration-300"
-              style={{ backgroundColor: switchOn ? hex : "transparent", borderRadius: Math.max(r / 2, 4) }}
-            >
-              <span
-                aria-hidden="true"
-                className={`absolute top-[2px] w-4 h-4 bg-white dark:bg-lavender-100 shadow-sm transition-all duration-300 ${switchOn ? "left-[20px]" : "left-[2px]"}`}
-                style={{ borderRadius: Math.max(r / 2 - 1, 3) }}
-              />
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="mt-5 space-y-4">
+      <div className="mt-5 lg:order-1 space-y-4">
         <div>
           <span className="block text-[11px] font-mono font-medium text-lavender-700 dark:text-lavender-300 mb-2">--color-accent</span>
           <div className="flex items-center gap-2.5">
@@ -467,26 +431,14 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
           --color-{accent}: <span className="font-bold" style={{ color: dark ? t.hexDark : t.inkHex }}>{hex}</span>; --radius: {r}px; --theme: {dark ? "dark" : "light"};
         </p>
       </div>
+      </div>
     </div>
   );
 }
 
-/* ─── Token dock — minimizable bottom-right window (LinkedIn-chat style) ─── */
+/* ─── Token modal — bottom sheet on mobile, centered dialog on desktop ─── */
 
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const fn = () => setIsDesktop(mq.matches);
-    mq.addEventListener("change", fn);
-    return () => mq.removeEventListener("change", fn);
-  }, []);
-  return isDesktop;
-}
-
-function TokenDock({ accent, onAccentChange, radius, onRadiusChange, dark, onToggleTheme }: {
+function TokenModal({ accent, onAccentChange, radius, onRadiusChange, dark, onToggleTheme }: {
   accent: Accent;
   onAccentChange: (a: Accent) => void;
   radius: Radius;
@@ -494,18 +446,17 @@ function TokenDock({ accent, onAccentChange, radius, onRadiusChange, dark, onTog
   dark: boolean;
   onToggleTheme: () => void;
 }) {
-  // Desktop: chat-style dock, open on load. Mobile: bottom-sheet modal on
-  // load, then a FAB to re-open. Same state drives both presentations.
-  const isDesktop = useIsDesktop();
+  // The playground auto-opens as a modal on load — a bottom sheet on small
+  // screens, a centered dialog on large ones — and a palette FAB re-opens
+  // it after dismissal. One state drives both presentations.
   const [open, setOpen] = useState(true);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
-  const mobileModal = !isDesktop && open;
 
   // Modal a11y: lock body scroll, close on Escape, move focus in on open
   // and back to the FAB on close.
   useEffect(() => {
-    if (!mobileModal) return;
+    if (!open) return;
     document.body.style.overflow = "hidden";
     closeBtnRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -517,112 +468,59 @@ function TokenDock({ accent, onAccentChange, radius, onRadiusChange, dark, onTog
       window.removeEventListener("keydown", onKey);
       fabRef.current?.focus();
     };
-  }, [mobileModal]);
+  }, [open]);
 
   const t = TOKENS[accent];
   const dotColor = dark ? t.hexDark : t.hex;
-  const headerBtn = (
-    <>
-      <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: dotColor }} />
-      <span className="text-[13px] font-bold text-lavender-700 dark:text-lavender-50">Live design tokens</span>
-      {open
-        ? <ChevronDown className="w-4 h-4 ml-auto text-lavender-600 dark:text-lavender-400" aria-hidden="true" />
-        : <ChevronUp className="w-4 h-4 ml-auto text-lavender-600 dark:text-lavender-400" aria-hidden="true" />}
-    </>
-  );
 
-  // Mobile: bottom-sheet modal + FAB instead of the chat dock.
-  if (!isDesktop) {
-    return open ? (
-      <div className="fixed inset-0 z-50">
-        <div
-          className="backdrop-in absolute inset-0 bg-lavender-950/50"
-          onClick={() => setOpen(false)}
-          aria-hidden="true"
-        />
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="token-sheet-title"
-          className="sheet-in dock-shell absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto bg-white dark:bg-lavender-950 border-t border-lavender-300/80 dark:border-lavender-700/40 shadow-[0_-8px_32px_rgba(35,33,54,0.25)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]"
-        >
-          <div className="sticky top-0 z-10 flex items-center gap-2.5 px-5 py-4 bg-white dark:bg-lavender-950 border-b border-lavender-200/80 dark:border-lavender-700/25">
-            <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: dotColor }} />
-            <span id="token-sheet-title" className="text-[13px] font-bold text-lavender-700 dark:text-lavender-50">Live design tokens</span>
-            <button
-              ref={closeBtnRef}
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Close design tokens"
-              className={`ml-auto -mr-2 p-2 rounded-lg text-lavender-600 dark:text-lavender-400 ${A[accent].hoverText} ${A[accent].hoverBg} transition-colors`}
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="p-5">
-            <TokenPlayground
-              accent={accent}
-              onAccentChange={onAccentChange}
-              radius={radius}
-              onRadiusChange={onRadiusChange}
-              dark={dark}
-              onToggleTheme={onToggleTheme}
-            />
-          </div>
-        </div>
-      </div>
-    ) : (
-      <button
-        ref={fabRef}
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Open design tokens"
-        className={`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 p-3.5 rounded-full ${A[accent].btn} shadow-lg shadow-black/20 dark:shadow-black/40 transition-colors duration-300`}
+  return open ? (
+    <div className="fixed inset-0 z-[70] flex items-end justify-center lg:items-center lg:p-8">
+      <div
+        className="backdrop-in absolute inset-0 bg-lavender-950/50"
+        onClick={() => setOpen(false)}
+        aria-hidden="true"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="token-sheet-title"
+        className="sheet-in relative w-full lg:w-[640px] max-h-[85dvh] lg:max-h-[calc(100vh-6rem)] overflow-y-auto bg-white dark:bg-lavender-950 border-t lg:border border-lavender-300/80 dark:border-lavender-700/40 shadow-[0_-8px_32px_rgba(35,33,54,0.25)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] rounded-t-[calc(var(--card-r,12px)+4px)] lg:rounded-[calc(var(--card-r,12px)+4px)] pb-[env(safe-area-inset-bottom)] lg:pb-0 transition-[border-radius] duration-300"
       >
-        <Palette className="w-5 h-5" />
-      </button>
-    );
-  }
-
-  return (
-    <div className="fixed bottom-0 right-4 sm:right-6 z-40">
-      {open ? (
-        <section
-          aria-label="Design tokens playground"
-          className="dock-in dock-shell w-[min(360px,calc(100vw-6rem))] max-h-[calc(100vh-5rem)] overflow-y-auto border border-b-0 border-lavender-300/80 dark:border-lavender-700/40 bg-white dark:bg-lavender-950 shadow-[0_-2px_12px_rgba(35,33,54,0.12)] dark:shadow-[0_-2px_12px_rgba(0,0,0,0.4)]"
-        >
+        <div className="sticky top-0 z-10 flex items-center gap-2.5 px-5 py-4 bg-white dark:bg-lavender-950 border-b border-lavender-200/80 dark:border-lavender-700/25">
+          <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: dotColor }} />
+          <span id="token-sheet-title" className="text-[13px] font-bold text-lavender-700 dark:text-lavender-50">Live design tokens</span>
           <button
+            ref={closeBtnRef}
             type="button"
             onClick={() => setOpen(false)}
-            aria-expanded="true"
-            aria-controls="token-dock-body"
-            className={`sticky top-0 w-full flex items-center gap-2.5 px-4 py-3 bg-white dark:bg-lavender-950 border-b border-lavender-200/80 dark:border-lavender-700/25 ${A[accent].hoverBg} transition-colors`}
+            aria-label="Close design tokens"
+            className={`ml-auto -mr-2 p-2 rounded-lg text-lavender-600 dark:text-lavender-400 ${A[accent].hoverText} ${A[accent].hoverBg} transition-colors`}
           >
-            {headerBtn}
+            <X className="w-5 h-5" />
           </button>
-          <div id="token-dock-body" className="p-5">
-            <TokenPlayground
-              accent={accent}
-              onAccentChange={onAccentChange}
-              radius={radius}
-              onRadiusChange={onRadiusChange}
-              dark={dark}
-              onToggleTheme={onToggleTheme}
-            />
-          </div>
-        </section>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-expanded="false"
-          aria-controls="token-dock-body"
-          className={`dock-in dock-shell flex items-center gap-2.5 w-56 sm:w-64 px-4 py-3 border border-b-0 border-lavender-300/80 dark:border-lavender-700/40 bg-white dark:bg-lavender-950 shadow-[0_-2px_12px_rgba(35,33,54,0.12)] dark:shadow-[0_-2px_12px_rgba(0,0,0,0.4)] ${A[accent].hoverBg} transition-colors`}
-        >
-          {headerBtn}
-        </button>
-      )}
+        </div>
+        <div className="p-5">
+          <TokenPlayground
+            accent={accent}
+            onAccentChange={onAccentChange}
+            radius={radius}
+            onRadiusChange={onRadiusChange}
+            dark={dark}
+            onToggleTheme={onToggleTheme}
+          />
+        </div>
+      </div>
     </div>
+  ) : (
+    <button
+      ref={fabRef}
+      type="button"
+      onClick={() => setOpen(true)}
+      aria-label="Open design tokens"
+      className={`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 p-3.5 rounded-full ${A[accent].btn} shadow-lg shadow-black/20 dark:shadow-black/40 transition-colors duration-300`}
+    >
+      <Palette className="w-5 h-5" />
+    </button>
   );
 }
 
@@ -637,7 +535,7 @@ export default function App() {
   useReveal();
 
   // Propagate the radius token to the page: .card surfaces read var(--card-r),
-  // so picking sm/md/lg in the dock reshapes the whole site.
+  // so picking sm/md/lg in the playground reshapes the whole site.
   useEffect(() => {
     document.documentElement.style.setProperty("--card-r", `${RADII[radius]}px`);
   }, [radius]);
@@ -958,8 +856,8 @@ export default function App() {
         </div>
       </footer>
 
-      {/* ── Token dock (bottom-right, like a chat window) ── */}
-      <TokenDock
+      {/* ── Token playground modal (auto-opens; palette FAB re-opens it) ── */}
+      <TokenModal
         accent={accent}
         onAccentChange={setAccent}
         radius={radius}
@@ -968,7 +866,7 @@ export default function App() {
         onToggleTheme={toggle}
       />
 
-      {/* ── Back to top (bottom-left; the dock owns the right corner) ── */}
+      {/* ── Back to top (bottom-left; the palette FAB owns the right corner) ── */}
       <BackToTop btnClass={A[accent].btn} />
     </div>
     </>

@@ -61,7 +61,7 @@ body {
 }
 
 @layer base {
-  /* Selection + focus follow the live accent token (set by the token dock) */
+  /* Selection + focus follow the live accent token (set by the token playground) */
   ::selection { background-color: color-mix(in srgb, var(--accent, #907aa9) 20%, transparent); }
   .dark ::selection { background-color: color-mix(in srgb, var(--accent-dark, #d4bdef) 22%, transparent); }
 
@@ -118,14 +118,7 @@ body {
 .hero-in > *:nth-child(5) { animation-delay: 0.7s; }
 @keyframes up { to { opacity: 1; transform: translateY(0); } }
 
-/* ── Token dock (LinkedIn-style bottom-right window) ── */
-@keyframes dockUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.dock-in { animation: dockUp 0.3s cubic-bezier(0.19, 1, 0.22, 1); }
-
-/* ── Mobile token sheet (modal presentation of the playground) ── */
+/* ── Token modal (bottom sheet on mobile, centered dialog on desktop) ── */
 @keyframes sheetUp {
   from { opacity: 0; transform: translateY(32px); }
   to { opacity: 1; transform: translateY(0); }
@@ -138,7 +131,7 @@ body {
 .backdrop-in { animation: backdropIn 0.2s ease-out; }
 
 /* ── Card ──
-   Radius comes from the live --card-r token (set by the token dock);
+   Radius comes from the live --card-r token (set by the token playground);
    fallback matches the default md step. */
 .card {
   border-radius: var(--card-r, 12px);
@@ -147,15 +140,6 @@ body {
               border-radius 300ms ease;
 }
 .card:hover { transform: translateY(-4px); }
-
-/* Dock window top corners follow the same radius token.
-   (Unlayered rule wins over the utility `transition-colors`, so keep
-   background-color animated here too for the collapsed button hover.) */
-.dock-shell {
-  border-top-left-radius: var(--card-r, 12px);
-  border-top-right-radius: var(--card-r, 12px);
-  transition: border-radius 300ms ease, background-color 150ms ease;
-}
 
 /* ── Section number ── */
 .sec-num {
@@ -228,9 +212,9 @@ html.dark body { background-color: #232136; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .card, .dock-shell { transition: none; }
+  .card { transition: none; }
   .card:hover { transform: none; }
-  .rv, .sg > *, .hero-in > *, .dock-in, .sheet-in, .backdrop-in {
+  .rv, .sg > *, .hero-in > *, .sheet-in, .backdrop-in {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
