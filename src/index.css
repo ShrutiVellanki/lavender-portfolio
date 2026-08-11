@@ -125,6 +125,18 @@ body {
 }
 .dock-in { animation: dockUp 0.3s cubic-bezier(0.19, 1, 0.22, 1); }
 
+/* ── Mobile token sheet (modal presentation of the playground) ── */
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.sheet-in { animation: sheetUp 0.3s cubic-bezier(0.19, 1, 0.22, 1); }
+.backdrop-in { animation: backdropIn 0.2s ease-out; }
+
 /* ── Card ──
    Radius comes from the live --card-r token (set by the token dock);
    fallback matches the default md step. */
@@ -218,7 +230,7 @@ html.dark body { background-color: #232136; }
   html { scroll-behavior: auto; }
   .card, .dock-shell { transition: none; }
   .card:hover { transform: none; }
-  .rv, .sg > *, .hero-in > *, .dock-in {
+  .rv, .sg > *, .hero-in > *, .dock-in, .sheet-in, .backdrop-in {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;

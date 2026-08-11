@@ -473,6 +473,19 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
 
 /* ─── Token dock — minimizable bottom-right window (LinkedIn-chat style) ─── */
 
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const fn = () => setIsDesktop(mq.matches);
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, []);
+  return isDesktop;
+}
+
 function TokenDock({ accent, onAccentChange, radius, onRadiusChange, dark, onToggleTheme }: {
   accent: Accent;
   onAccentChange: (a: Accent) => void;
@@ -481,11 +494,31 @@ function TokenDock({ accent, onAccentChange, radius, onRadiusChange, dark, onTog
   dark: boolean;
   onToggleTheme: () => void;
 }) {
-  // Open on load where there's room; collapsed on small screens where the
-  // expanded panel would cover most of the viewport.
-  const [open, setOpen] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
-  );
+  // Desktop: chat-style dock, open on load. Mobile: bottom-sheet modal on
+  // load, then a FAB to re-open. Same state drives both presentations.
+  const isDesktop = useIsDesktop();
+  const [open, setOpen] = useState(true);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const fabRef = useRef<HTMLButtonElement>(null);
+  const mobileModal = !isDesktop && open;
+
+  // Modal a11y: lock body scroll, close on Escape, move focus in on open
+  // and back to the FAB on close.
+  useEffect(() => {
+    if (!mobileModal) return;
+    document.body.style.overflow = "hidden";
+    closeBtnRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+      fabRef.current?.focus();
+    };
+  }, [mobileModal]);
+
   const t = TOKENS[accent];
   const dotColor = dark ? t.hexDark : t.hex;
   const headerBtn = (
@@ -497,6 +530,59 @@ function TokenDock({ accent, onAccentChange, radius, onRadiusChange, dark, onTog
         : <ChevronUp className="w-4 h-4 ml-auto text-lavender-600 dark:text-lavender-400" aria-hidden="true" />}
     </>
   );
+
+  // Mobile: bottom-sheet modal + FAB instead of the chat dock.
+  if (!isDesktop) {
+    return open ? (
+      <div className="fixed inset-0 z-50">
+        <div
+          className="backdrop-in absolute inset-0 bg-lavender-950/50"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="token-sheet-title"
+          className="sheet-in dock-shell absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto bg-white dark:bg-lavender-950 border-t border-lavender-300/80 dark:border-lavender-700/40 shadow-[0_-8px_32px_rgba(35,33,54,0.25)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]"
+        >
+          <div className="sticky top-0 z-10 flex items-center gap-2.5 px-5 py-4 bg-white dark:bg-lavender-950 border-b border-lavender-200/80 dark:border-lavender-700/25">
+            <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: dotColor }} />
+            <span id="token-sheet-title" className="text-[13px] font-bold text-lavender-700 dark:text-lavender-50">Live design tokens</span>
+            <button
+              ref={closeBtnRef}
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close design tokens"
+              className={`ml-auto -mr-2 p-2 rounded-lg text-lavender-600 dark:text-lavender-400 ${A[accent].hoverText} ${A[accent].hoverBg} transition-colors`}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="p-5">
+            <TokenPlayground
+              accent={accent}
+              onAccentChange={onAccentChange}
+              radius={radius}
+              onRadiusChange={onRadiusChange}
+              dark={dark}
+              onToggleTheme={onToggleTheme}
+            />
+          </div>
+        </div>
+      </div>
+    ) : (
+      <button
+        ref={fabRef}
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Open design tokens"
+        className={`fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 p-3.5 rounded-full ${A[accent].btn} shadow-lg shadow-black/20 dark:shadow-black/40 transition-colors duration-300`}
+      >
+        <Palette className="w-5 h-5" />
+      </button>
+    );
+  }
 
   return (
     <div className="fixed bottom-0 right-4 sm:right-6 z-40">
