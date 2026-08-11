@@ -135,9 +135,9 @@ function useReveal() {
 
 const SECTIONS = [
   { id: "about", label: "About" },
-  { id: "skills", label: "Skills" },
   { id: "experience", label: "Experience" },
   { id: "projects", label: "Projects" },
+  { id: "skills", label: "Skills" },
   { id: "talks", label: "Talks" },
   { id: "contact", label: "Contact" },
 ];
@@ -651,7 +651,7 @@ export default function App() {
 
       <main id="main">
         {/* ══════════════ HERO ══════════════ */}
-        <section id="about" className="relative pt-28 pb-14 sm:pt-32 sm:pb-20 px-6 sm:px-10 bg-lavender-100/70 dark:bg-lavender-950/65">
+        <section id="about" className="relative pt-28 pb-8 sm:pt-32 sm:pb-12 px-6 sm:px-10 bg-lavender-100/70 dark:bg-lavender-950/65">
           {/* soft radial halo behind hero text — invisible card, real contrast */}
           <div
             aria-hidden="true"
@@ -686,30 +686,8 @@ export default function App() {
           </div>
         </section>
 
-        {/* ══════════════ SKILLS ══════════════ */}
-        <Section id="skills" title="Skills">
-          <div className="grid lg:grid-cols-2 lg:auto-rows-fr gap-4 sg">
-            {SKILLS.map((s) => {
-              const ac = A[accent];
-              return (
-                <div key={s.category} className="card p-7 bg-white/95 dark:bg-lavender-950/90 border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg} transition-colors duration-300`}>{s.icon}</span>
-                    <h3 className="text-sm font-bold tracking-wide text-lavender-700 dark:text-lavender-100">{s.category}</h3>
-                  </div>
-                  <ul className="space-y-2">
-                    {s.items.map((item) => (
-                      <li key={item} className="text-sm text-lavender-700 dark:text-lavender-400 leading-snug pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-1 before:h-1 before:rounded-full before:bg-lavender-400 dark:before:bg-lavender-600">{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-
         {/* ══════════════ EXPERIENCE ══════════════ */}
-        <Section id="experience" title="Experience" alt>
+        <Section id="experience" title="Experience">
           <div className="space-y-14">
             {EXPERIENCE.map((exp) => {
               const ac = A[accent];
@@ -756,7 +734,7 @@ export default function App() {
         </Section>
 
         {/* ══════════════ PROJECTS ══════════════ */}
-        <Section id="projects" title="Projects">
+        <Section id="projects" title="Projects" alt>
           <div className="grid lg:grid-cols-3 gap-5 sg">
             {PROJECTS.map((p) => {
               const ac = A[accent];
@@ -791,6 +769,28 @@ export default function App() {
                       )}
                     </div>
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        </Section>
+
+        {/* ══════════════ SKILLS ══════════════ */}
+        <Section id="skills" title="Skills">
+          <div className="grid auto-rows-fr lg:grid-cols-2 gap-4 sg">
+            {SKILLS.map((s) => {
+              const ac = A[accent];
+              return (
+                <div key={s.category} className="card p-7 bg-white/95 dark:bg-lavender-950/90 border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg} transition-colors duration-300`}>{s.icon}</span>
+                    <h3 className="text-sm font-bold tracking-wide text-lavender-700 dark:text-lavender-100">{s.category}</h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {s.items.map((item) => (
+                      <li key={item} className="text-sm text-lavender-700 dark:text-lavender-400 leading-snug pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-1 before:h-1 before:rounded-full before:bg-lavender-400 dark:before:bg-lavender-600">{item}</li>
+                    ))}
+                  </ul>
                 </div>
               );
             })}
@@ -897,14 +897,14 @@ function Section({ id, title, alt, center, children }: {
   return (
     <section
       id={id}
-      className={`relative py-14 sm:py-20 px-6 sm:px-10 ${
+      className={`relative py-8 sm:py-12 px-6 sm:px-10 ${
         alt
           ? "bg-lavender-100/80 dark:bg-lavender-950/75"
           : "bg-lavender-50/60 dark:bg-lavender-900/45"
       }`}
     >
       <div className="relative max-w-6xl mx-auto rv">
-        <div className={`relative mb-12 ${center ? "text-center" : ""}`}>
+        <div className={`relative mb-8 ${center ? "text-center" : ""}`}>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.03em] text-lavender-700 dark:text-lavender-50">
             {title}
           </h2>
