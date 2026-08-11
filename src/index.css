@@ -29,57 +29,81 @@
   --color-pine-light: #ccb0c6;
   --color-rose: #d7827e;
   --color-rose-light: #f0ada9;
+
+  /* "-ink" variants: darker shades of each accent used for small TEXT on
+     light backgrounds, so accent-colored labels meet WCAG AA 4.5:1.
+     Fills and dark-mode pastels keep the vivid base hexes. */
+  --color-iris-ink: #7a6395;
+  --color-foam-ink: #527a63;
+  --color-gold-ink: #9a6511;
+  --color-love-ink: #a85570;
+  --color-pine-ink: #7a6375;
+  --color-rose-ink: #a35450;
 }
 
 html {
   scroll-behavior: smooth;
-  /* Render the page as if zoomed to 125% — scales every rem-based size */
-  font-size: 125%;
+  /* Slightly enlarged base (18px) — generous but conventional */
+  font-size: 112.5%;
 }
 
-/* Smaller base on mobile — desktop's 125% is too tight on narrow viewports */
+/* Standard 16px base on mobile */
 @media (max-width: 768px) {
-  html { font-size: 108%; }
+  html { font-size: 100%; }
 }
 
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  font-optical-sizing: auto;
 }
 
 @layer base {
-  ::selection { background-color: rgba(144, 122, 169, 0.18); }
-  .dark ::selection { background-color: rgba(212, 189, 239, 0.18); }
+  /* Selection + focus follow the live accent token (set by the token dock) */
+  ::selection { background-color: color-mix(in srgb, var(--accent, #907aa9) 20%, transparent); }
+  .dark ::selection { background-color: color-mix(in srgb, var(--accent-dark, #d4bdef) 22%, transparent); }
+
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+
+  :where(a, button):focus-visible {
+    outline: 2px solid var(--accent, var(--color-iris));
+    outline-offset: 2px;
+  }
+  .dark :where(a, button):focus-visible { outline-color: var(--accent-dark, var(--color-iris-light)); }
 }
 
 /* ── Progress bar ── */
 .progress-bar { transform-origin: left; }
 
-/* ── Scroll reveal ── */
-.rv {
-  opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1),
-              transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
-}
-.rv.show { opacity: 1; transform: translateY(0); }
-
-/* ── Stagger children ── */
-.sg > * {
+/* ── Scroll reveal ──
+   Hidden states are scoped to html.js (set in index.html) so content is
+   never gated on a transition that might not fire. */
+.js .rv {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.6s cubic-bezier(0.19, 1, 0.22, 1),
-              transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: opacity 0.55s cubic-bezier(0.19, 1, 0.22, 1),
+              transform 0.55s cubic-bezier(0.19, 1, 0.22, 1);
 }
-.sg.show > * { opacity: 1; transform: translateY(0); }
-.sg.show > *:nth-child(1) { transition-delay: 0s; }
-.sg.show > *:nth-child(2) { transition-delay: 0.08s; }
-.sg.show > *:nth-child(3) { transition-delay: 0.16s; }
-.sg.show > *:nth-child(4) { transition-delay: 0.24s; }
-.sg.show > *:nth-child(5) { transition-delay: 0.32s; }
-.sg.show > *:nth-child(6) { transition-delay: 0.4s; }
-.sg.show > *:nth-child(7) { transition-delay: 0.48s; }
+.js .rv.show { opacity: 1; transform: translateY(0); }
+
+/* ── Stagger children ── */
+.js .sg > * {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+              transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.js .sg.show > * { opacity: 1; transform: translateY(0); }
+.js .sg.show > *:nth-child(1) { transition-delay: 0s; }
+.js .sg.show > *:nth-child(2) { transition-delay: 0.06s; }
+.js .sg.show > *:nth-child(3) { transition-delay: 0.12s; }
+.js .sg.show > *:nth-child(4) { transition-delay: 0.18s; }
+.js .sg.show > *:nth-child(5) { transition-delay: 0.24s; }
+.js .sg.show > *:nth-child(6) { transition-delay: 0.3s; }
+.js .sg.show > *:nth-child(7) { transition-delay: 0.36s; }
 
 /* ── Hero entrance ── */
 .hero-in > * {
@@ -94,12 +118,32 @@ body {
 .hero-in > *:nth-child(5) { animation-delay: 0.7s; }
 @keyframes up { to { opacity: 1; transform: translateY(0); } }
 
-/* ── Card ── */
+/* ── Token dock (LinkedIn-style bottom-right window) ── */
+@keyframes dockUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dock-in { animation: dockUp 0.3s cubic-bezier(0.19, 1, 0.22, 1); }
+
+/* ── Card ──
+   Radius comes from the live --card-r token (set by the token dock);
+   fallback matches the default md step. */
 .card {
+  border-radius: var(--card-r, 12px);
   transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1),
-              box-shadow 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+              box-shadow 0.35s cubic-bezier(0.19, 1, 0.22, 1),
+              border-radius 300ms ease;
 }
 .card:hover { transform: translateY(-4px); }
+
+/* Dock window top corners follow the same radius token.
+   (Unlayered rule wins over the utility `transition-colors`, so keep
+   background-color animated here too for the collapsed button hover.) */
+.dock-shell {
+  border-top-left-radius: var(--card-r, 12px);
+  border-top-right-radius: var(--card-r, 12px);
+  transition: border-radius 300ms ease, background-color 150ms ease;
+}
 
 /* ── Section number ── */
 .sec-num {
@@ -117,12 +161,11 @@ body {
   z-index: 0;
   pointer-events: none;
   opacity: 0.12;
-  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='1.5' fill='%23907aa9' opacity='0.3'/%3E%3Ccircle cx='60' cy='10' r='1' fill='%236e9a82' opacity='0.25'/%3E%3Ccircle cx='110' cy='10' r='1.5' fill='%23b4637a' opacity='0.2'/%3E%3Cpath d='M35 8l2 2-2 2-2-2z' fill='%23907aa9' opacity='0.15'/%3E%3Cpath d='M85 8l2 2-2 2-2-2z' fill='%23d7827e' opacity='0.15'/%3E%3Ccircle cx='35' cy='35' r='1' fill='%23ea9d34' opacity='0.2'/%3E%3Ccircle cx='85' cy='35' r='1.5' fill='%23907aa9' opacity='0.2'/%3E%3Cpath d='M10 33l2 2-2 2-2-2z' fill='%236e9a82' opacity='0.12'/%3E%3Cpath d='M60 33l2 2-2 2-2-2z' fill='%23856b80' opacity='0.15'/%3E%3Cpath d='M110 33l2 2-2 2-2-2z' fill='%23b4637a' opacity='0.12'/%3E%3Ccircle cx='10' cy='60' r='1' fill='%23d7827e' opacity='0.25'/%3E%3Ccircle cx='60' cy='60' r='1.5' fill='%23907aa9' opacity='0.18'/%3E%3Ccircle cx='110' cy='60' r='1' fill='%236e9a82' opacity='0.25'/%3E%3Cpath d='M35 58l2 2-2 2-2-2z' fill='%23ea9d34' opacity='0.12'/%3E%3Cpath d='M85 58l2 2-2 2-2-2z' fill='%23907aa9' opacity='0.12'/%3E%3Ccircle cx='35' cy='85' r='1.5' fill='%23856b80' opacity='0.2'/%3E%3Ccircle cx='85' cy='85' r='1' fill='%23ea9d34' opacity='0.2'/%3E%3Cpath d='M10 83l2 2-2 2-2-2z' fill='%23d7827e' opacity='0.15'/%3E%3Cpath d='M60 83l2 2-2 2-2-2z' fill='%236e9a82' opacity='0.12'/%3E%3Cpath d='M110 83l2 2-2 2-2-2z' fill='%23907aa9' opacity='0.15'/%3E%3Ccircle cx='10' cy='110' r='1' fill='%236e9a82' opacity='0.2'/%3E%3Ccircle cx='60' cy='110' r='1.5' fill='%23b4637a' opacity='0.2'/%3E%3Ccircle cx='110' cy='110' r='1' fill='%23856b80' opacity='0.25'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 120px 120px;
 }
-.dark .geo-bg::before { opacity: 0.06; mix-blend-mode: screen; }
+.dark .geo-bg::before { opacity: 0.06; }
 
 /* ── Body fallback colour (covers paint before WebGL boots, & for no-WebGL clients) ── */
 body { background-color: #fafafc; }
@@ -172,7 +215,10 @@ html.dark body { background-color: #232136; }
 .cw-taunt-in { animation: cwTauntIn 0.35s cubic-bezier(0.19, 1, 0.22, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .rv, .sg > *, .hero-in > * {
+  html { scroll-behavior: auto; }
+  .card, .dock-shell { transition: none; }
+  .card:hover { transform: none; }
+  .rv, .sg > *, .hero-in > *, .dock-in {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sun, Moon, Mail, ExternalLink, ArrowUp, Code2, Palette,
-  BarChart3, Globe, Briefcase, Mic, Menu, X, Coffee, Hand, Wrench,
-  ShieldCheck, CalendarCog, Megaphone, Sparkles,
+  BarChart3, Globe, Mic, Menu, X,
+  ShieldCheck, CalendarCog, Megaphone, ChevronUp, ChevronDown,
 } from "lucide-react";
 import ShaderBackground from "./components/ShaderBackground";
 import { ProjectPreview, type PreviewKey } from "./components/ProjectPreview";
@@ -33,6 +33,12 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
+/* ─── Utils ─── */
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 /* ─── Theme hook ─── */
 
 function useTheme() {
@@ -49,19 +55,64 @@ function useTheme() {
   return { dark, toggle: () => setDark((d) => !d) };
 }
 
-/* ─── Scroll progress hook ─── */
+/* ─── Scroll progress bar ───
+   Leaf component that writes scaleX to the DOM directly (rAF-coalesced),
+   so per-pixel scroll updates never re-render the App tree. */
 
-function useScrollProgress() {
-  const [p, setP] = useState(0);
+function ProgressBar({ accentClass }: { accentClass: string }) {
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const fn = () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      setP(h > 0 ? window.scrollY / h : 0);
+    let maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      if (!ref.current) return;
+      const p = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+      ref.current.style.transform = `scaleX(${p})`;
     };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    const onResize = () => {
+      maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      onScroll();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    update();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+  return (
+    <div className="fixed top-0 inset-x-0 z-[60] h-0.5">
+      <div ref={ref} className={`progress-bar h-full ${accentClass} opacity-60`} style={{ transform: "scaleX(0)" }} />
+    </div>
+  );
+}
+
+/* ─── Back to top ───
+   Leaf component so the 500px threshold crossing only re-renders the button. */
+
+function BackToTop({ btnClass }: { btnClass: string }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const fn = () => setShow(window.scrollY > 500);
+    fn();
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
-  return p;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" })}
+      className={`fixed bottom-6 left-6 z-40 p-3 rounded-full ${btnClass} shadow-lg shadow-black/15 dark:shadow-black/30 transition-all duration-500 ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+      aria-label="Back to top"
+    >
+      <ArrowUp className="w-4 h-4" />
+    </button>
+  );
 }
 
 /* ─── Scroll reveal hook ─── */
@@ -73,7 +124,7 @@ function useReveal() {
       (entries) => entries.forEach((e) => {
         if (e.isIntersecting) { e.target.classList.add("show"); obs.unobserve(e.target); }
       }),
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+      { threshold: 0.05, rootMargin: "0px 0px 0px 0px" },
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
@@ -83,12 +134,12 @@ function useReveal() {
 /* ─── Data ─── */
 
 const SECTIONS = [
-  { id: "about", label: "About", num: "01", icon: <Hand className="w-3.5 h-3.5 shrink-0 -scale-x-100 -rotate-[22deg] origin-[56%_90%]" aria-hidden="true" /> },
-  { id: "skills", label: "Skills", num: "02", icon: <Wrench className="w-3.5 h-3.5" /> },
-  { id: "experience", label: "Experience", num: "03", icon: <Briefcase className="w-3.5 h-3.5" /> },
-  { id: "projects", label: "Projects", num: "04", icon: <Code2 className="w-3.5 h-3.5" /> },
-  { id: "talks", label: "Talks", num: "05", icon: <Mic className="w-3.5 h-3.5" /> },
-  { id: "contact", label: "Contact", num: "06", icon: <Coffee className="w-3.5 h-3.5" /> },
+  { id: "about", label: "About" },
+  { id: "skills", label: "Skills" },
+  { id: "experience", label: "Experience" },
+  { id: "projects", label: "Projects" },
+  { id: "talks", label: "Talks" },
+  { id: "contact", label: "Contact" },
 ];
 
 const SOCIALS = [
@@ -108,29 +159,14 @@ type ExperienceRole = {
 type ExperienceEntry = {
   company: string;
   subtitle?: string;
-  accent: Accent;
   icon: React.ReactNode;
   roles: ExperienceRole[];
 };
 
 const EXPERIENCE: ExperienceEntry[] = [
   {
-    company: "Ascend",
-    accent: "love",
-    icon: <Sparkles className="w-4 h-4" />,
-    roles: [
-      {
-        title: "Product Engineer — AI Team",
-        period: "Jun 2026 – Present",
-        location: "Remote",
-        description: "",
-      },
-    ],
-  },
-  {
     company: "Gen",
     subtitle: "(NortonLifeLock & Avast)",
-    accent: "iris",
     icon: <ShieldCheck className="w-4 h-4" />,
     roles: [
       {
@@ -138,20 +174,19 @@ const EXPERIENCE: ExperienceEntry[] = [
         period: "Jun 2025 – Jun 2026",
         description:
           "Building + owning Dark Web Monitoring features for Norton™ 360 and Avast, delivering Organic Upsell initiatives on a global remote team. (50M+ users)",
-        skills: ["Artificial Intelligence (AI)", "Anthropic Claude", "Svelte"],
+        skills: ["AI", "Claude", "Svelte"],
       },
       {
         title: "Software Engineer — Digital Trust Services",
         period: "Jul 2022 – Jun 2025",
         description:
           "Frontend engineering & internal tooling on Interac Verified (now acquired by Interac). Leading development for the Interac Verified Design System.",
-        skills: ["Design Systems", "Artificial Intelligence (AI)", "React"],
+        skills: ["Design Systems", "AI", "React"],
       },
     ],
   },
   {
     company: "Fiix by Rockwell Automation",
-    accent: "foam",
     icon: <CalendarCog className="w-4 h-4" />,
     roles: [
       {
@@ -165,7 +200,6 @@ const EXPERIENCE: ExperienceEntry[] = [
   },
   {
     company: "Veriday Inc",
-    accent: "gold",
     icon: <Megaphone className="w-4 h-4" />,
     roles: [
       {
@@ -173,7 +207,7 @@ const EXPERIENCE: ExperienceEntry[] = [
         period: "Jan 2021 – Jun 2021",
         description:
           "Frontend Engineering + Accessibility Audits on Veriday's Digital Agent.",
-        skills: ["W3C Accessibility", "Front-End Development"],
+        skills: ["Accessibility", "Front-End Development"],
       },
     ],
   },
@@ -186,7 +220,6 @@ type ProjectEntry = {
   github: string;
   live?: string;
   icon: React.ReactNode;
-  accent: "iris" | "foam" | "gold" | "love" | "pine" | "rose";
   preview: PreviewKey;
 };
 
@@ -199,7 +232,6 @@ const PROJECTS: ProjectEntry[] = [
     github: "https://github.com/ShrutiVellanki/lavender-finance",
     live: "https://lavender-finance.vercel.app",
     icon: <BarChart3 className="w-5 h-5" />,
-    accent: "foam",
     preview: "finance",
   },
   {
@@ -210,7 +242,6 @@ const PROJECTS: ProjectEntry[] = [
     github: "https://github.com/ShrutiVellanki/lavender-storybook",
     live: "https://lavender-storybook.vercel.app",
     icon: <Palette className="w-5 h-5" />,
-    accent: "iris",
     preview: "storybook",
   },
   {
@@ -220,63 +251,318 @@ const PROJECTS: ProjectEntry[] = [
     tags: ["Python", "LangChain", "GPT-5", "PyMuPDF"],
     github: "https://github.com/ShrutiVellanki/recipe-extraction-demo",
     icon: <Code2 className="w-5 h-5" />,
-    accent: "gold",
     preview: "recipe",
   },
 ];
 
 const TALKS = [
   {
-    title: "Addressing The Current State of Cognitive Accessibility",
-    event: "Toronto Javascript Meetup",
-    date: "April 2024",
+    title: "Addressing the Current State of Cognitive Accessibility",
+    event: "Toronto JavaScript Meetup",
+    date: "Apr 2024",
     description: "Making UIs legible under real-world cognitive load — bridging dev and design to support actual human attention patterns.",
     link: "https://docs.google.com/presentation/d/1JY9PGEJFxRvTTRGSnXWxPeX7zwe-zKVvcjYojPiqGSU/edit?slide=id.g2cdf78d232d_0_593#slide=id.g2cdf78d232d_0_593",
-    accent: "love" as const,
   },
   {
     title: "How to Add Accessibility Checks to Your Workflow",
-    event: "Toronto Javascript Meetup",
-    date: "Sept 2023",
+    event: "Toronto JavaScript Meetup",
+    date: "Sep 2023",
     description: "Practical strategies for weaving accessibility checks into everyday development without slowing down delivery.",
     link: "https://docs.google.com/presentation/d/1fNus6C7VcLAzvOt0sP0vIMvvTH3_DRhFOT6VBsvqVAo/edit?slide=id.g282c81c7448_1_166#slide=id.g282c81c7448_1_166",
-    accent: "rose" as const,
   },
 ];
 
 const SKILLS = [
-  { category: "Development", items: ["React", "Svelte", "TypeScript", "JavaScript", "REST API Integration", "Tailwind CSS", "CI/CD (TeamCity)"], icon: <Code2 className="w-5 h-5" />, accent: "iris" as const },
-  { category: "UX & Design", items: ["Storybook", "Storybook Addons for Visual Testing", "Unit Testing", "Accessibility", "Figma"], icon: <Palette className="w-5 h-5" />, accent: "foam" as const },
-  { category: "Cross-functional Collaboration", items: ["Teamwork with design, product, and development teams"], icon: <Globe className="w-5 h-5" />, accent: "gold" as const },
-  { category: "AI & A11Y", items: ["ARIA", "WCAG", "WAI", "JAWS", "NVDA", "Axe", "AI Tooling (Cursor, Github Copilot)"], icon: <BarChart3 className="w-5 h-5" />, accent: "love" as const },
+  { category: "Development", items: ["React", "Svelte", "TypeScript", "JavaScript", "REST API Integration", "Tailwind CSS", "CI/CD (TeamCity)"], icon: <Code2 className="w-5 h-5" /> },
+  { category: "UX & Design", items: ["Storybook", "Visual Testing (Storybook Addons)", "Unit Testing", "Accessibility", "Figma"], icon: <Palette className="w-5 h-5" /> },
+  { category: "Cross-functional Collaboration", items: ["Partnering with design, product, and engineering teams"], icon: <Globe className="w-5 h-5" /> },
+  { category: "AI & Accessibility", items: ["ARIA", "WCAG", "WAI", "JAWS", "NVDA", "Axe", "AI Tooling (Cursor, GitHub Copilot)"], icon: <BarChart3 className="w-5 h-5" /> },
 ];
 
 type Accent = "iris" | "foam" | "gold" | "love" | "pine" | "rose";
 
-const A: Record<Accent, { text: string; bg: string; border: string; pill: string; hoverText: string; solid: string }> = {
-  iris:  { text: "text-iris dark:text-iris-light", bg: "bg-iris/8 dark:bg-iris-light/8", border: "border-iris/40 dark:border-iris-light/30", pill: "bg-iris/10 text-iris dark:bg-iris-light/10 dark:text-iris-light", hoverText: "hover:text-iris dark:hover:text-iris-light", solid: "bg-iris dark:bg-iris-light" },
-  foam:  { text: "text-foam dark:text-foam-light", bg: "bg-foam/8 dark:bg-foam-light/8", border: "border-foam/40 dark:border-foam-light/30", pill: "bg-foam/10 text-foam dark:bg-foam-light/10 dark:text-foam-light", hoverText: "hover:text-foam dark:hover:text-foam-light", solid: "bg-foam dark:bg-foam-light" },
-  gold:  { text: "text-gold dark:text-gold-light", bg: "bg-gold/4 dark:bg-gold-light/5", border: "border-gold/25 dark:border-gold-light/20", pill: "bg-gold/10 text-gold dark:bg-gold-light/10 dark:text-gold-light", hoverText: "hover:text-gold dark:hover:text-gold-light", solid: "bg-gold dark:bg-gold-light" },
-  love:  { text: "text-love dark:text-love-light", bg: "bg-love/8 dark:bg-love-light/8", border: "border-love/40 dark:border-love-light/30", pill: "bg-love/10 text-love dark:bg-love-light/10 dark:text-love-light", hoverText: "hover:text-love dark:hover:text-love-light", solid: "bg-love dark:bg-love-light" },
-  pine:  { text: "text-pine dark:text-pine-light", bg: "bg-pine/8 dark:bg-pine-light/8", border: "border-pine/40 dark:border-pine-light/30", pill: "bg-pine/10 text-pine dark:bg-pine-light/10 dark:text-pine-light", hoverText: "hover:text-pine dark:hover:text-pine-light", solid: "bg-pine dark:bg-pine-light" },
-  rose:  { text: "text-rose dark:text-rose-light", bg: "bg-rose/8 dark:bg-rose-light/8", border: "border-rose/40 dark:border-rose-light/30", pill: "bg-rose/10 text-rose dark:bg-rose-light/10 dark:text-rose-light", hoverText: "hover:text-rose dark:hover:text-rose-light", solid: "bg-rose dark:bg-rose-light" },
+const A: Record<Accent, { text: string; bg: string; border: string; pill: string; hoverText: string; hoverBg: string; solid: string; btn: string; socialHover: string }> = {
+  iris:  { text: "text-iris-ink dark:text-iris-light", bg: "bg-iris/8 dark:bg-iris-light/8", border: "border-iris/40 dark:border-iris-light/30", pill: "bg-iris/10 text-iris-ink dark:bg-iris-light/10 dark:text-iris-light", hoverText: "hover:text-iris-ink dark:hover:text-iris-light", hoverBg: "hover:bg-iris/10 dark:hover:bg-iris-light/10", solid: "bg-iris dark:bg-iris-light", btn: "bg-iris text-white hover:bg-iris/85 dark:bg-iris-light dark:text-lavender-950 dark:hover:bg-iris-light/85", socialHover: "hover:text-iris-ink dark:hover:text-iris-light hover:border-iris/40 dark:hover:border-iris-light/30 hover:bg-iris/10 dark:hover:bg-iris-light/10" },
+  foam:  { text: "text-foam-ink dark:text-foam-light", bg: "bg-foam/8 dark:bg-foam-light/8", border: "border-foam/40 dark:border-foam-light/30", pill: "bg-foam/10 text-foam-ink dark:bg-foam-light/10 dark:text-foam-light", hoverText: "hover:text-foam-ink dark:hover:text-foam-light", hoverBg: "hover:bg-foam/10 dark:hover:bg-foam-light/10", solid: "bg-foam dark:bg-foam-light", btn: "bg-foam text-white hover:bg-foam/85 dark:bg-foam-light dark:text-lavender-950 dark:hover:bg-foam-light/85", socialHover: "hover:text-foam-ink dark:hover:text-foam-light hover:border-foam/40 dark:hover:border-foam-light/30 hover:bg-foam/10 dark:hover:bg-foam-light/10" },
+  gold:  { text: "text-gold-ink dark:text-gold-light", bg: "bg-gold/4 dark:bg-gold-light/5", border: "border-gold/25 dark:border-gold-light/20", pill: "bg-gold/10 text-gold-ink dark:bg-gold-light/10 dark:text-gold-light", hoverText: "hover:text-gold-ink dark:hover:text-gold-light", hoverBg: "hover:bg-gold/10 dark:hover:bg-gold-light/10", solid: "bg-gold dark:bg-gold-light", btn: "bg-gold text-lavender-950 hover:bg-gold/85 dark:bg-gold-light dark:text-lavender-950 dark:hover:bg-gold-light/85", socialHover: "hover:text-gold-ink dark:hover:text-gold-light hover:border-gold/40 dark:hover:border-gold-light/30 hover:bg-gold/10 dark:hover:bg-gold-light/10" },
+  love:  { text: "text-love-ink dark:text-love-light", bg: "bg-love/8 dark:bg-love-light/8", border: "border-love/40 dark:border-love-light/30", pill: "bg-love/10 text-love-ink dark:bg-love-light/10 dark:text-love-light", hoverText: "hover:text-love-ink dark:hover:text-love-light", hoverBg: "hover:bg-love/10 dark:hover:bg-love-light/10", solid: "bg-love dark:bg-love-light", btn: "bg-love text-white hover:bg-love/85 dark:bg-love-light dark:text-lavender-950 dark:hover:bg-love-light/85", socialHover: "hover:text-love-ink dark:hover:text-love-light hover:border-love/40 dark:hover:border-love-light/30 hover:bg-love/10 dark:hover:bg-love-light/10" },
+  pine:  { text: "text-pine-ink dark:text-pine-light", bg: "bg-pine/8 dark:bg-pine-light/8", border: "border-pine/40 dark:border-pine-light/30", pill: "bg-pine/10 text-pine-ink dark:bg-pine-light/10 dark:text-pine-light", hoverText: "hover:text-pine-ink dark:hover:text-pine-light", hoverBg: "hover:bg-pine/10 dark:hover:bg-pine-light/10", solid: "bg-pine dark:bg-pine-light", btn: "bg-pine text-white hover:bg-pine/85 dark:bg-pine-light dark:text-lavender-950 dark:hover:bg-pine-light/85", socialHover: "hover:text-pine-ink dark:hover:text-pine-light hover:border-pine/40 dark:hover:border-pine-light/30 hover:bg-pine/10 dark:hover:bg-pine-light/10" },
+  rose:  { text: "text-rose-ink dark:text-rose-light", bg: "bg-rose/8 dark:bg-rose-light/8", border: "border-rose/40 dark:border-rose-light/30", pill: "bg-rose/10 text-rose-ink dark:bg-rose-light/10 dark:text-rose-light", hoverText: "hover:text-rose-ink dark:hover:text-rose-light", hoverBg: "hover:bg-rose/10 dark:hover:bg-rose-light/10", solid: "bg-rose dark:bg-rose-light", btn: "bg-rose text-lavender-950 hover:bg-rose/85 dark:bg-rose-light dark:text-lavender-950 dark:hover:bg-rose-light/85", socialHover: "hover:text-rose-ink dark:hover:text-rose-light hover:border-rose/40 dark:hover:border-rose-light/30 hover:bg-rose/10 dark:hover:bg-rose-light/10" },
 };
+
+/* ─── Token playground (hero showpiece) ───
+   A live specimen rendered from the site's own Rosé Pine tokens.
+   The accent picked here re-themes the whole page: buttons, links, card
+   chips, pills, focus rings, selection, and the scroll progress bar. */
+
+const TOKENS: Record<Accent, { hex: string; hexDark: string; inkHex: string; ink?: boolean }> = {
+  iris: { hex: "#907aa9", hexDark: "#d4bdef", inkHex: "#7a6395" },
+  foam: { hex: "#6e9a82", hexDark: "#a8d4b8", inkHex: "#527a63" },
+  gold: { hex: "#ea9d34", hexDark: "#fad49a", inkHex: "#9a6511", ink: true },
+  love: { hex: "#b4637a", hexDark: "#f082a0", inkHex: "#a85570" },
+  pine: { hex: "#856b80", hexDark: "#ccb0c6", inkHex: "#7a6375" },
+  rose: { hex: "#d7827e", hexDark: "#f0ada9", inkHex: "#a35450", ink: true },
+};
+const ACCENT_KEYS = Object.keys(TOKENS) as Accent[];
+const RADII = { sm: 4, md: 12, lg: 24 } as const;
+type Radius = keyof typeof RADII;
+
+function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark, onToggleTheme }: {
+  accent: Accent;
+  onAccentChange: (a: Accent) => void;
+  radius: Radius;
+  onRadiusChange: (r: Radius) => void;
+  dark: boolean;
+  onToggleTheme: () => void;
+}) {
+  const [switchOn, setSwitchOn] = useState(true);
+  const t = TOKENS[accent];
+  const hex = dark ? t.hexDark : t.hex;
+  // Dark-theme accents are pastels (need ink text); light-theme gold/rose are too bright for white.
+  const btnInk = dark || t.ink ? "#1a1830" : "#ffffff";
+  const r = RADII[radius];
+
+  return (
+    <div>
+      <p className="text-[13px] leading-snug text-lavender-700 dark:text-lavender-300">
+        This site renders from the same design tokens as{" "}
+        <a href="https://github.com/ShrutiVellanki/lavender-storybook" target="_blank" rel="noopener noreferrer" className={`font-semibold ${A[accent].text} hover:underline transition-colors duration-300`}>lavender-storybook</a>.
+        Change a token below and the whole page updates.
+      </p>
+
+      {/* Specimen */}
+      <div
+        className="mt-5 border border-lavender-300/70 dark:border-lavender-700/30 bg-lavender-100/80 dark:bg-lavender-900/70 p-4 transition-[border-radius] duration-300"
+        style={{ borderRadius: r + 6 }}
+      >
+        <div
+          className="bg-white dark:bg-lavender-950 border border-lavender-200 dark:border-lavender-700/25 p-4 transition-[border-radius] duration-300"
+          style={{ borderRadius: r }}
+        >
+          <div className="flex items-center gap-2.5">
+            <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: hex }} />
+            <span className="text-[13px] font-bold text-lavender-700 dark:text-lavender-50">Lavender UI</span>
+            <span
+              className="ml-auto px-2 py-0.5 text-[10px] font-bold tracking-wide transition-colors duration-300"
+              style={{ borderRadius: 999, backgroundColor: hex + (dark ? "26" : "1f"), color: dark ? t.hexDark : t.inkHex }}
+            >
+              v2.0
+            </span>
+          </div>
+          <div aria-hidden="true" className="mt-4 flex items-end gap-1.5 h-14">
+            {[0.45, 0.75, 0.55, 1, 0.65].map((h, i) => (
+              <span
+                key={i}
+                className="flex-1 transition-colors duration-300"
+                style={{ height: `${h * 100}%`, backgroundColor: hex, opacity: 0.35 + h * 0.55, borderRadius: Math.max(2, Math.min(r / 2, 10)), transition: "background-color 300ms, border-radius 300ms" }}
+              />
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              className="px-3.5 py-1.5 text-[13px] font-bold transition-[background-color,border-radius] duration-300"
+              style={{ borderRadius: r, backgroundColor: hex, color: btnInk }}
+            >
+              Primary
+            </button>
+            <button
+              type="button"
+              className="px-3.5 py-1.5 text-[13px] font-bold border transition-[color,border-color,border-radius] duration-300"
+              style={{ borderRadius: r, borderColor: dark ? t.hexDark : t.inkHex, color: dark ? t.hexDark : t.inkHex }}
+            >
+              Ghost
+            </button>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={switchOn}
+              aria-label="Specimen switch"
+              onClick={() => setSwitchOn(!switchOn)}
+              className="ml-auto relative w-10 h-[22px] border border-lavender-300 dark:border-lavender-700/40 transition-[background-color,border-radius] duration-300"
+              style={{ backgroundColor: switchOn ? hex : "transparent", borderRadius: Math.max(r / 2, 4) }}
+            >
+              <span
+                aria-hidden="true"
+                className={`absolute top-[2px] w-4 h-4 bg-white dark:bg-lavender-100 shadow-sm transition-all duration-300 ${switchOn ? "left-[20px]" : "left-[2px]"}`}
+                style={{ borderRadius: Math.max(r / 2 - 1, 3) }}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="mt-5 space-y-4">
+        <div>
+          <span className="block text-[11px] font-mono font-medium text-lavender-700 dark:text-lavender-300 mb-2">--color-accent</span>
+          <div className="flex items-center gap-2.5">
+            {ACCENT_KEYS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={accent === k}
+                aria-label={`Use ${k} accent`}
+                onClick={() => onAccentChange(k)}
+                className={`w-7 h-7 rounded-full border border-lavender-900/15 dark:border-white/20 transition-transform duration-200 hover:scale-110 ${
+                  accent === k ? "ring-2 ring-offset-2 ring-offset-white dark:ring-offset-lavender-950" : ""
+                }`}
+                style={{
+                  backgroundColor: dark ? TOKENS[k].hexDark : TOKENS[k].hex,
+                  ...(accent === k ? { "--tw-ring-color": dark ? TOKENS[k].hexDark : TOKENS[k].hex } : {}),
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+        </div>
+        <div>
+          <span className="block text-[11px] font-mono font-medium text-lavender-700 dark:text-lavender-300 mb-2">--radius</span>
+          <div className="inline-flex rounded-lg border border-lavender-300/80 dark:border-lavender-700/40 overflow-hidden">
+            {(Object.keys(RADII) as Radius[]).map((k) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={radius === k}
+                onClick={() => onRadiusChange(k)}
+                className={`px-3 py-1 text-[12px] font-bold uppercase tracking-wide transition-colors ${
+                  radius === k ? "" : "text-lavender-700 dark:text-lavender-300 hover:bg-lavender-100 dark:hover:bg-lavender-900/60"
+                }`}
+                style={radius === k ? { backgroundColor: hex, color: btnInk } : undefined}
+              >
+                {k}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <span className="block text-[11px] font-mono font-medium text-lavender-700 dark:text-lavender-300 mb-2">--theme</span>
+          <div className="inline-flex rounded-lg border border-lavender-300/80 dark:border-lavender-700/40 overflow-hidden">
+            <button
+              type="button"
+              aria-pressed={!dark}
+              aria-label="Switch to light theme"
+              onClick={() => { if (dark) onToggleTheme(); }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-bold uppercase tracking-wide transition-colors ${
+                !dark ? "" : "text-lavender-700 dark:text-lavender-300 hover:bg-lavender-100 dark:hover:bg-lavender-900/60"
+              }`}
+              style={!dark ? { backgroundColor: hex, color: btnInk } : undefined}
+            >
+              <Sun className="w-3.5 h-3.5" aria-hidden="true" /> light
+            </button>
+            <button
+              type="button"
+              aria-pressed={dark}
+              aria-label="Switch to dark theme"
+              onClick={() => { if (!dark) onToggleTheme(); }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-bold uppercase tracking-wide transition-colors ${
+                dark ? "" : "text-lavender-700 dark:text-lavender-300 hover:bg-lavender-100 dark:hover:bg-lavender-900/60"
+              }`}
+              style={dark ? { backgroundColor: hex, color: btnInk } : undefined}
+            >
+              <Moon className="w-3.5 h-3.5" aria-hidden="true" /> dark
+            </button>
+          </div>
+        </div>
+        <p aria-live="polite" className="font-mono text-[11px] text-lavender-700 dark:text-lavender-300 border-t border-lavender-200/80 dark:border-lavender-700/25 pt-3">
+          --color-{accent}: <span className="font-bold" style={{ color: dark ? t.hexDark : t.inkHex }}>{hex}</span>; --radius: {r}px; --theme: {dark ? "dark" : "light"};
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Token dock — minimizable bottom-right window (LinkedIn-chat style) ─── */
+
+function TokenDock({ accent, onAccentChange, radius, onRadiusChange, dark, onToggleTheme }: {
+  accent: Accent;
+  onAccentChange: (a: Accent) => void;
+  radius: Radius;
+  onRadiusChange: (r: Radius) => void;
+  dark: boolean;
+  onToggleTheme: () => void;
+}) {
+  // Open on load where there's room; collapsed on small screens where the
+  // expanded panel would cover most of the viewport.
+  const [open, setOpen] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
+  );
+  const t = TOKENS[accent];
+  const dotColor = dark ? t.hexDark : t.hex;
+  const headerBtn = (
+    <>
+      <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: dotColor }} />
+      <span className="text-[13px] font-bold text-lavender-700 dark:text-lavender-50">Live design tokens</span>
+      {open
+        ? <ChevronDown className="w-4 h-4 ml-auto text-lavender-600 dark:text-lavender-400" aria-hidden="true" />
+        : <ChevronUp className="w-4 h-4 ml-auto text-lavender-600 dark:text-lavender-400" aria-hidden="true" />}
+    </>
+  );
+
+  return (
+    <div className="fixed bottom-0 right-4 sm:right-6 z-40">
+      {open ? (
+        <section
+          aria-label="Design tokens playground"
+          className="dock-in dock-shell w-[min(360px,calc(100vw-6rem))] max-h-[calc(100vh-5rem)] overflow-y-auto border border-b-0 border-lavender-300/80 dark:border-lavender-700/40 bg-white dark:bg-lavender-950 shadow-[0_-2px_12px_rgba(35,33,54,0.12)] dark:shadow-[0_-2px_12px_rgba(0,0,0,0.4)]"
+        >
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-expanded="true"
+            aria-controls="token-dock-body"
+            className={`sticky top-0 w-full flex items-center gap-2.5 px-4 py-3 bg-white dark:bg-lavender-950 border-b border-lavender-200/80 dark:border-lavender-700/25 ${A[accent].hoverBg} transition-colors`}
+          >
+            {headerBtn}
+          </button>
+          <div id="token-dock-body" className="p-5">
+            <TokenPlayground
+              accent={accent}
+              onAccentChange={onAccentChange}
+              radius={radius}
+              onRadiusChange={onRadiusChange}
+              dark={dark}
+              onToggleTheme={onToggleTheme}
+            />
+          </div>
+        </section>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-expanded="false"
+          aria-controls="token-dock-body"
+          className={`dock-in dock-shell flex items-center gap-2.5 w-56 sm:w-64 px-4 py-3 border border-b-0 border-lavender-300/80 dark:border-lavender-700/40 bg-white dark:bg-lavender-950 shadow-[0_-2px_12px_rgba(35,33,54,0.12)] dark:shadow-[0_-2px_12px_rgba(0,0,0,0.4)] ${A[accent].hoverBg} transition-colors`}
+        >
+          {headerBtn}
+        </button>
+      )}
+    </div>
+  );
+}
 
 /* ─── App ─── */
 
 export default function App() {
   const { dark, toggle } = useTheme();
-  const [showTop, setShowTop] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [active, setActive] = useState("");
-  const progress = useScrollProgress();
+  const [accent, setAccent] = useState<Accent>("iris");
+  const [radius, setRadius] = useState<Radius>("md");
   useReveal();
 
+  // Propagate the radius token to the page: .card surfaces read var(--card-r),
+  // so picking sm/md/lg in the dock reshapes the whole site.
   useEffect(() => {
-    const fn = () => setShowTop(window.scrollY > 500);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
+    document.documentElement.style.setProperty("--card-r", `${RADII[radius]}px`);
+  }, [radius]);
+
+  // Propagate the accent token to CSS-only chrome (text selection, focus rings).
+  useEffect(() => {
+    const t = TOKENS[accent];
+    const s = document.documentElement.style;
+    s.setProperty("--accent", t.hex);
+    s.setProperty("--accent-dark", t.hexDark);
+  }, [accent]);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -292,16 +578,21 @@ export default function App() {
     <ShaderBackground dark={dark} />
     <div className="geo-bg min-h-screen text-lavender-700 dark:text-lavender-300 transition-colors duration-500 bg-lavender-50/10 dark:bg-lavender-900/20">
 
+      <a
+        href="#main"
+        className={`sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:shadow-lg ${A[accent].btn}`}
+      >
+        Skip to content
+      </a>
+
       {/* ── Progress bar (sits on top edge of nav) ── */}
-      <div className="fixed top-0 inset-x-0 z-[60] h-0.5">
-        <div className="progress-bar h-full bg-iris/60 dark:bg-iris-light/50" style={{ transform: `scaleX(${progress})` }} />
-      </div>
+      <ProgressBar accentClass={A[accent].solid} />
 
       {/* ── Nav ── */}
-      <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-lg bg-lavender-50/70 dark:bg-lavender-900/70 border-b border-lavender-300/30 dark:border-lavender-700/10">
+      <nav aria-label="Primary" className="fixed top-0 inset-x-0 z-50 backdrop-blur-lg bg-lavender-50/70 dark:bg-lavender-900/70 border-b border-lavender-300/30 dark:border-lavender-700/10">
         <div className="px-6 sm:px-10">
           <div className="max-w-6xl mx-auto h-14 flex items-center justify-between">
-          <a href="#" className="text-[15px] font-bold tracking-[-0.02em] text-lavender-700 dark:text-lavender-100 hover:text-iris dark:hover:text-iris-light transition-colors">
+          <a href="#" className={`text-[15px] font-bold tracking-[-0.02em] text-lavender-700 dark:text-lavender-100 ${A[accent].hoverText} transition-colors`}>
             Shruti Vellanki
           </a>
 
@@ -312,30 +603,27 @@ export default function App() {
                 <li key={s.id}>
                   <a
                     href={`#${s.id}`}
-                    className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium tracking-wide transition-colors ${
+                    aria-current={active === s.id ? "page" : undefined}
+                    className={`relative inline-flex items-center px-3 py-1.5 text-[13px] font-medium tracking-wide transition-colors ${
                       active === s.id
-                        ? "text-iris dark:text-iris-light"
-                        : "text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200"
+                        ? A[accent].text
+                        : `text-lavender-700 dark:text-lavender-300 ${A[accent].hoverText}`
                     }`}
                   >
-                    {s.icon} {s.label}
+                    {s.label}
                     {active === s.id && (
-                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-iris dark:bg-iris-light rounded-full" />
+                      <span className={`absolute bottom-0 left-3 right-3 h-[2px] ${A[accent].solid} rounded-full`} />
                     )}
                   </a>
                 </li>
               ))}
             </ul>
 
-            <a href="#contact" className="hidden lg:inline-flex items-center gap-1.5 ml-4 px-4 py-1.5 text-[13px] font-semibold rounded-full bg-lavender-700 dark:bg-lavender-100 text-white dark:text-lavender-900 hover:bg-lavender-800 dark:hover:bg-white transition-colors">
-              <Coffee className="w-3.5 h-3.5" /> Get in Touch
+            <a href="#contact" className={`hidden lg:inline-flex items-center ml-4 px-4 py-1.5 text-[13px] font-semibold rounded-full ${A[accent].btn} transition-colors duration-300`}>
+              Get in Touch
             </a>
 
-            <button onClick={toggle} className="p-2 ml-2 rounded-lg text-lavender-400 hover:text-lavender-700 dark:hover:text-lavender-100 transition-colors" aria-label="Toggle theme">
-              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            <button onClick={() => setMobileNav(!mobileNav)} className="lg:hidden p-2 rounded-lg text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200 transition-colors" aria-label="Toggle menu">
+            <button onClick={() => setMobileNav(!mobileNav)} className={`lg:hidden p-2 ml-2 rounded-lg text-lavender-600 dark:text-lavender-400 ${A[accent].hoverText} ${A[accent].hoverBg} transition-colors`} aria-label={mobileNav ? "Close menu" : "Open menu"} aria-expanded={mobileNav} aria-controls="mobile-nav">
               {mobileNav ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
@@ -344,72 +632,74 @@ export default function App() {
 
         {/* Mobile dropdown */}
         {mobileNav && (
-          <div className="lg:hidden border-t border-lavender-300/30 dark:border-lavender-700/10 bg-lavender-50/95 dark:bg-lavender-900/95 backdrop-blur-lg">
+          <div id="mobile-nav" className="lg:hidden border-t border-lavender-300/30 dark:border-lavender-700/10 bg-lavender-50/95 dark:bg-lavender-900/95 backdrop-blur-lg">
             <div className="px-6 sm:px-10">
               <div className="max-w-6xl mx-auto py-5 space-y-4">
-              {SECTIONS.map((s) => (
-                <a key={s.id} href={`#${s.id}`} onClick={() => setMobileNav(false)} className={`flex items-center gap-2 text-sm font-medium transition-colors ${active === s.id ? "text-iris dark:text-iris-light" : "text-lavender-500 hover:text-lavender-700 dark:hover:text-lavender-200"}`}>
-                  <span className="sec-num text-lavender-400 dark:text-lavender-600">{s.num}</span>{s.icon} {s.label}
+              {SECTIONS.filter(s => s.id !== "contact").map((s) => (
+                <a key={s.id} href={`#${s.id}`} onClick={() => setMobileNav(false)} aria-current={active === s.id ? "page" : undefined} className={`flex items-center text-sm font-medium transition-colors ${active === s.id ? A[accent].text : `text-lavender-700 dark:text-lavender-300 ${A[accent].hoverText}`}`}>
+                  {s.label}
                 </a>
               ))}
+              <a href="#contact" onClick={() => setMobileNav(false)} className={`inline-flex items-center px-4 py-2 text-sm font-semibold rounded-full ${A[accent].btn} transition-colors duration-300`}>
+                Get in Touch
+              </a>
               </div>
             </div>
           </div>
         )}
       </nav>
 
-      <main>
+      <main id="main">
         {/* ══════════════ HERO ══════════════ */}
-        <section id="about" className="relative pt-32 pb-20 sm:pt-44 sm:pb-28 px-6 sm:px-10 bg-lavender-100/45 dark:bg-lavender-950/40 backdrop-blur-md">
+        <section id="about" className="relative pt-28 pb-14 sm:pt-32 sm:pb-20 px-6 sm:px-10 bg-lavender-100/70 dark:bg-lavender-950/65">
           {/* soft radial halo behind hero text — invisible card, real contrast */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 [background:radial-gradient(75%_65%_at_30%_50%,rgba(250,250,252,0.78),rgba(250,250,252,0.30)_55%,transparent_80%)] dark:[background:radial-gradient(75%_65%_at_30%_50%,rgba(26,24,48,0.85),rgba(26,24,48,0.35)_55%,transparent_80%)]"
           />
-          <div className="relative max-w-6xl mx-auto hero-in">
-            <span className="sec-num text-lavender-500 dark:text-lavender-400 block mb-2 [text-shadow:0_1px_14px_rgba(250,250,252,0.7)] dark:[text-shadow:0_1px_14px_rgba(26,24,48,0.8)]">
-              01
-            </span>
-            <p className="sec-num text-iris dark:text-iris-light mb-6 [text-shadow:0_1px_22px_rgba(250,250,252,0.85),0_0_2px_rgba(250,250,252,0.6)] dark:[text-shadow:0_1px_22px_rgba(26,24,48,0.9),0_0_2px_rgba(26,24,48,0.7)]">
-              Product Engineer
-            </p>
-            <h1 className="text-[clamp(2.8rem,8vw,6rem)] font-extrabold tracking-[-0.04em] leading-[0.95] text-lavender-800 dark:text-lavender-50 [text-shadow:0_2px_36px_rgba(250,250,252,0.85),0_0_3px_rgba(250,250,252,0.5)] dark:[text-shadow:0_2px_36px_rgba(26,24,48,0.95),0_0_3px_rgba(26,24,48,0.7)]">
-              Shruti<br />Vellanki
-            </h1>
-            <p className="mt-8 max-w-lg text-lg text-lavender-800 dark:text-lavender-50 leading-relaxed font-medium [text-shadow:0_1px_24px_rgba(250,250,252,0.9),0_0_2px_rgba(250,250,252,0.6)] dark:[text-shadow:0_1px_24px_rgba(26,24,48,0.95),0_0_2px_rgba(26,24,48,0.7)]">
-              Hi, I&apos;m Shruti — a product engineer focused on great UX, platform UI, and AI-powered features.
-            </p>
-            <div className="mt-10 flex items-center gap-5">
-              {SOCIALS.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target={s.href.startsWith("mailto") ? undefined : "_blank"}
-                  rel="noopener noreferrer"
-                  aria-label={s.label}
-                  className="p-3 rounded-full backdrop-blur-md bg-white/55 dark:bg-lavender-950/55 border border-lavender-300/60 dark:border-lavender-700/40 text-lavender-700 dark:text-lavender-100 hover:text-iris dark:hover:text-iris-light hover:border-iris/40 dark:hover:border-iris-light/30 hover:bg-iris/10 dark:hover:bg-iris-light/10 transition-all duration-300"
-                >
-                  {s.icon}
-                </a>
-              ))}
+          <div className="relative max-w-6xl mx-auto">
+            <div className="hero-in">
+              <p className={`sec-num ${A[accent].text} mb-6 transition-colors duration-300 [text-shadow:0_1px_22px_rgba(250,250,252,0.85),0_0_2px_rgba(250,250,252,0.6)] dark:[text-shadow:0_1px_22px_rgba(26,24,48,0.9),0_0_2px_rgba(26,24,48,0.7)]`}>
+                Product Engineer · Toronto
+              </p>
+              <h1 className="text-[clamp(2.75rem,7vw,5rem)] font-extrabold tracking-[-0.04em] leading-[0.95] text-lavender-700 dark:text-lavender-50 [text-shadow:0_2px_36px_rgba(250,250,252,0.85),0_0_3px_rgba(250,250,252,0.5)] dark:[text-shadow:0_2px_36px_rgba(26,24,48,0.95),0_0_3px_rgba(26,24,48,0.7)]">
+                Shruti<br />Vellanki
+              </h1>
+              <p className="mt-8 max-w-lg text-lg text-lavender-700 dark:text-lavender-50 leading-relaxed font-medium [text-shadow:0_1px_24px_rgba(250,250,252,0.9),0_0_2px_rgba(250,250,252,0.6)] dark:[text-shadow:0_1px_24px_rgba(26,24,48,0.95),0_0_2px_rgba(26,24,48,0.7)]">
+                Product engineer focused on great UX, platform UI, and AI-powered features.
+              </p>
+              <div className="mt-10 flex items-center gap-5">
+                {SOCIALS.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target={s.href.startsWith("mailto") ? undefined : "_blank"}
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className={`p-3 rounded-full bg-white/75 dark:bg-lavender-950/75 border border-lavender-300/60 dark:border-lavender-700/40 text-lavender-700 dark:text-lavender-100 ${A[accent].socialHover} transition-all duration-300`}
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
         {/* ══════════════ SKILLS ══════════════ */}
-        <Section id="skills" num="02" title="Skills" icon={<Wrench className="w-8 h-8" />}>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sg">
+        <Section id="skills" title="Skills">
+          <div className="grid lg:grid-cols-2 lg:auto-rows-fr gap-4 sg">
             {SKILLS.map((s) => {
-              const ac = A[s.accent];
+              const ac = A[accent];
               return (
-                <div key={s.category} className="card rounded-2xl p-7 bg-white/85 dark:bg-lavender-950/70 backdrop-blur-md border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
+                <div key={s.category} className="card p-7 bg-white/95 dark:bg-lavender-950/90 border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg}`}>{s.icon}</span>
+                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg} transition-colors duration-300`}>{s.icon}</span>
                     <h3 className="text-sm font-bold tracking-wide text-lavender-700 dark:text-lavender-100">{s.category}</h3>
                   </div>
                   <ul className="space-y-2">
                     {s.items.map((item) => (
-                      <li key={item} className="text-[15px] text-lavender-600 dark:text-lavender-400 leading-snug pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-1 before:h-1 before:rounded-full before:bg-lavender-400 dark:before:bg-lavender-600">{item}</li>
+                      <li key={item} className="text-sm text-lavender-700 dark:text-lavender-400 leading-snug pl-3 relative before:content-[''] before:absolute before:left-0 before:top-[9px] before:w-1 before:h-1 before:rounded-full before:bg-lavender-400 dark:before:bg-lavender-600">{item}</li>
                     ))}
                   </ul>
                 </div>
@@ -419,18 +709,18 @@ export default function App() {
         </Section>
 
         {/* ══════════════ EXPERIENCE ══════════════ */}
-        <Section id="experience" num="03" title="Experience" icon={<Briefcase className="w-8 h-8" />} alt>
+        <Section id="experience" title="Experience" alt>
           <div className="space-y-14">
             {EXPERIENCE.map((exp) => {
-              const ac = A[exp.accent];
+              const ac = A[accent];
               return (
                 <div key={exp.company} className="rv">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg}`}>{exp.icon}</span>
+                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg} transition-colors duration-300`}>{exp.icon}</span>
                     <div>
                       <h3 className="text-lg font-bold text-lavender-700 dark:text-lavender-100 leading-tight">
                         {exp.company}
-                        {exp.subtitle && <span className="font-normal text-lavender-500 dark:text-lavender-500 ml-2 text-base">{exp.subtitle}</span>}
+                        {exp.subtitle && <span className="font-normal text-lavender-700 dark:text-lavender-400 ml-2 text-base">{exp.subtitle}</span>}
                       </h3>
                     </div>
                   </div>
@@ -438,21 +728,21 @@ export default function App() {
                   <div className="space-y-8 ml-[18px] pl-8 border-l-2 border-lavender-400/70 dark:border-lavender-500/50">
                     {exp.roles.map((role) => (
                       <div key={role.title + role.period} className="relative">
-                        <span className={`absolute -left-[calc(2rem+7px)] top-0 w-3 h-3 rounded-full ${ac.solid} ring-2 ring-lavender-50 dark:ring-lavender-950 shadow-sm`} />
+                        <span className={`absolute -left-[calc(2rem+7px)] top-0 w-3 h-3 rounded-full ${ac.solid} ring-2 ring-lavender-50 dark:ring-lavender-950 shadow-sm transition-colors duration-300`} />
                         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                          <h4 className="text-[15px] font-semibold text-lavender-700 dark:text-lavender-200">{role.title}</h4>
-                          <span className="text-xs font-semibold tracking-wide text-lavender-700 dark:text-lavender-200 uppercase">{role.period}</span>
+                          <h4 className="text-base font-semibold text-lavender-700 dark:text-lavender-200">{role.title}</h4>
+                          <span className="text-xs font-semibold tracking-wide text-lavender-700 dark:text-lavender-200 uppercase tabular-nums">{role.period}</span>
                         </div>
                         {role.location && (
-                          <p className="text-xs text-lavender-600 dark:text-lavender-300 mt-1 tracking-wide">{role.location}</p>
+                          <p className="text-xs text-lavender-700 dark:text-lavender-300 mt-1 tracking-wide">{role.location}</p>
                         )}
                         {role.description && (
-                          <p className="text-sm text-lavender-600 dark:text-lavender-400 mt-3 leading-relaxed">{role.description}</p>
+                          <p className="text-sm text-lavender-700 dark:text-lavender-400 mt-3 leading-relaxed">{role.description}</p>
                         )}
                         {role.skills && role.skills.length > 0 && (
                           <div className="mt-4 flex flex-wrap gap-1.5">
                             {role.skills.map((skill) => (
-                              <span key={skill} className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${ac.pill}`}>{skill}</span>
+                              <span key={skill} className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${ac.pill} transition-colors duration-300`}>{skill}</span>
                             ))}
                           </div>
                         )}
@@ -466,36 +756,36 @@ export default function App() {
         </Section>
 
         {/* ══════════════ PROJECTS ══════════════ */}
-        <Section id="projects" num="04" title="Projects" icon={<Code2 className="w-8 h-8" />}>
+        <Section id="projects" title="Projects">
           <div className="grid lg:grid-cols-3 gap-5 sg">
             {PROJECTS.map((p) => {
-              const ac = A[p.accent];
+              const ac = A[accent];
               return (
-                <div key={p.title} className="card group flex flex-col rounded-2xl overflow-hidden bg-white/85 dark:bg-lavender-950/70 backdrop-blur-md border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
+                <div key={p.title} className="card group flex flex-col overflow-hidden bg-white/95 dark:bg-lavender-950/90 border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
                   {/* preview — inset frame reads clearly on light cards */}
                   <div className="relative mx-3 mt-3 aspect-[16/10] shrink-0 overflow-hidden rounded-xl border border-lavender-400/55 bg-lavender-100/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.45)] dark:border-lavender-600/40 dark:bg-lavender-900/60 dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
-                    <ProjectPreview kind={p.preview} accent={p.accent} className="absolute inset-0 w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+                    <ProjectPreview kind={p.preview} accent={accent} className="absolute inset-0 w-full h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
                     <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/15 dark:from-lavender-950/30 to-transparent" />
                   </div>
 
                   {/* content */}
                   <div className="flex flex-col flex-1 p-6 pt-5">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className={`${ac.text} p-2 rounded-lg ${ac.bg}`}>{p.icon}</span>
+                      <span className={`${ac.text} p-2 rounded-lg ${ac.bg} transition-colors duration-300`}>{p.icon}</span>
                       <h3 className="text-base font-bold text-lavender-700 dark:text-lavender-100">{p.title}</h3>
                     </div>
-                    <p className="text-sm text-lavender-600 dark:text-lavender-400 leading-relaxed mb-4">{p.description}</p>
+                    <p className="text-sm text-lavender-700 dark:text-lavender-400 leading-relaxed mb-4">{p.description}</p>
                     <div className="flex flex-wrap gap-1.5 mb-6">
                       {p.tags.map((t) => (
-                        <span key={t} className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${ac.pill}`}>{t}</span>
+                        <span key={t} className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-full ${ac.pill} transition-colors duration-300`}>{t}</span>
                       ))}
                     </div>
                     <div className="flex items-center gap-5 text-sm mt-auto pt-4 border-t border-lavender-200/60 dark:border-lavender-700/15">
-                      <a href={p.github} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-500 ${ac.hoverText} transition-colors`}>
+                      <a href={p.github} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-700 dark:text-lavender-300 ${ac.hoverText} transition-colors`}>
                         <GithubIcon className="w-4 h-4" /> Code
                       </a>
                       {p.live && (
-                        <a href={p.live} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-500 ${ac.hoverText} transition-colors`}>
+                        <a href={p.live} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-700 dark:text-lavender-300 ${ac.hoverText} transition-colors`}>
                           <ExternalLink className="w-4 h-4" /> Live
                         </a>
                       )}
@@ -508,24 +798,24 @@ export default function App() {
         </Section>
 
         {/* ══════════════ TALKS ══════════════ */}
-        <Section id="talks" num="05" title="Talks" icon={<Mic className="w-8 h-8" />} alt>
-          <div className="grid sm:grid-cols-2 gap-5 sg">
+        <Section id="talks" title="Talks" alt>
+          <div className="grid lg:grid-cols-2 gap-5 sg lg:max-w-3xl">
             {TALKS.map((talk) => {
-              const ac = A[talk.accent];
+              const ac = A[accent];
               return (
-                <div key={talk.title} className="card flex flex-col rounded-2xl p-7 bg-white/85 dark:bg-lavender-950/70 backdrop-blur-md border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
+                <div key={talk.title} className="card flex flex-col p-7 bg-white/95 dark:bg-lavender-950/90 border border-lavender-200 dark:border-lavender-700/15 hover:shadow-lg hover:shadow-lavender-300/15 dark:hover:shadow-black/20">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg}`}><Mic className="w-5 h-5" /></span>
+                    <span className={`${ac.text} p-2 rounded-lg ${ac.bg} transition-colors duration-300`}><Mic className="w-5 h-5" /></span>
                     <h3 className="text-base font-bold text-lavender-700 dark:text-lavender-100 leading-snug">{talk.title}</h3>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-xs font-bold tracking-wide uppercase ${ac.text}`}>{talk.event}</span>
-                    {talk.date && <span className="text-xs text-lavender-400 dark:text-lavender-600 font-medium">· {talk.date}</span>}
+                    <span className={`text-xs font-bold tracking-wide uppercase ${ac.text} transition-colors duration-300`}>{talk.event}</span>
+                    {talk.date && <span className="text-xs text-lavender-700 dark:text-lavender-400 font-medium">· {talk.date}</span>}
                   </div>
-                  <p className="text-sm text-lavender-600 dark:text-lavender-400 leading-relaxed mb-4">{talk.description}</p>
+                  <p className="text-sm text-lavender-700 dark:text-lavender-400 leading-relaxed mb-4">{talk.description}</p>
                   {talk.link && (
                     <div className="flex items-center gap-5 text-sm mt-auto pt-4 border-t border-lavender-200/60 dark:border-lavender-700/15">
-                      <a href={talk.link} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-500 ${ac.hoverText} transition-colors`}>
+                      <a href={talk.link} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 font-medium text-lavender-700 dark:text-lavender-300 ${ac.hoverText} transition-colors`}>
                         <ExternalLink className="w-4 h-4" /> View Slides
                       </a>
                     </div>
@@ -537,12 +827,21 @@ export default function App() {
         </Section>
 
         {/* ══════════════ CONTACT ══════════════ */}
-        <Section id="contact" num="06" title="Get in Touch" icon={<Coffee className="w-8 h-8" />} center>
+        <Section id="contact" title="Get in Touch" center>
           <div className="max-w-md mx-auto text-center">
-            <p className="text-base text-lavender-600 dark:text-lavender-400 leading-relaxed">
+            <p className="text-base text-lavender-700 dark:text-lavender-300 leading-relaxed">
               Always open to interesting conversations and opportunities — or just grabbing a coffee somewhere in Toronto. Feel free to reach out.
             </p>
-            <div className="mt-10 flex justify-center gap-5">
+            <div className="mt-8">
+              <a
+                href="mailto:shvellanki@gmail.com"
+                className={`inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-full ${A[accent].btn} transition-colors duration-300`}
+              >
+                <Mail className="w-4 h-4" />
+                Email me
+              </a>
+            </div>
+            <div className="mt-8 flex justify-center gap-5">
               {SOCIALS.map((s) => (
                 <a
                   key={s.label}
@@ -550,7 +849,7 @@ export default function App() {
                   target={s.href.startsWith("mailto") ? undefined : "_blank"}
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="p-3 rounded-full backdrop-blur-md bg-white/55 dark:bg-lavender-950/55 border border-lavender-300/60 dark:border-lavender-700/40 text-lavender-700 dark:text-lavender-100 hover:text-iris dark:hover:text-iris-light hover:border-iris/40 dark:hover:border-iris-light/30 hover:bg-iris/10 dark:hover:bg-iris-light/10 transition-all duration-300"
+                  className={`p-3 rounded-full bg-white/75 dark:bg-lavender-950/75 border border-lavender-300/60 dark:border-lavender-700/40 text-lavender-700 dark:text-lavender-100 ${A[accent].socialHover} transition-all duration-300`}
                 >
                   {s.icon}
                 </a>
@@ -561,26 +860,30 @@ export default function App() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="relative py-10 px-6 border-t border-lavender-300/70 dark:border-lavender-700/40 bg-lavender-100/45 dark:bg-lavender-950/40 backdrop-blur-md">
+      <footer className="relative py-10 px-6 border-t border-lavender-300/70 dark:border-lavender-700/40 bg-lavender-100/70 dark:bg-lavender-950/65">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4 text-xs font-medium text-lavender-700 dark:text-lavender-200">
           <span>&copy; {new Date().getFullYear()} Shruti Vellanki</span>
           <span>
             Built with{" "}
-            <a href="https://github.com/ShrutiVellanki/lavender-storybook" target="_blank" rel="noopener noreferrer" className="text-iris dark:text-iris-light hover:underline font-semibold">
+            <a href="https://github.com/ShrutiVellanki/lavender-storybook" target="_blank" rel="noopener noreferrer" className={`${A[accent].text} hover:underline font-semibold transition-colors duration-300`}>
               lavender-storybook
             </a>
           </span>
         </div>
       </footer>
 
-      {/* ── Back to top ── */}
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className={`fixed bottom-6 right-6 z-40 p-3 rounded-full bg-lavender-700 dark:bg-lavender-100 text-white dark:text-lavender-900 shadow-lg shadow-lavender-700/20 dark:shadow-black/30 transition-all duration-500 ${showTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
-        aria-label="Back to top"
-      >
-        <ArrowUp className="w-4 h-4" />
-      </button>
+      {/* ── Token dock (bottom-right, like a chat window) ── */}
+      <TokenDock
+        accent={accent}
+        onAccentChange={setAccent}
+        radius={radius}
+        onRadiusChange={setRadius}
+        dark={dark}
+        onToggleTheme={toggle}
+      />
+
+      {/* ── Back to top (bottom-left; the dock owns the right corner) ── */}
+      <BackToTop btnClass={A[accent].btn} />
     </div>
     </>
   );
@@ -588,32 +891,21 @@ export default function App() {
 
 /* ─── Section wrapper ─── */
 
-function Section({ id, num, title, icon, alt, center, children }: {
-  id: string; num: string; title: string; icon?: React.ReactNode; alt?: boolean; center?: boolean; children: React.ReactNode;
+function Section({ id, title, alt, center, children }: {
+  id: string; title: string; alt?: boolean; center?: boolean; children: React.ReactNode;
 }) {
   return (
     <section
       id={id}
-      className={`relative py-24 sm:py-36 px-6 sm:px-10 ${
-        alt ? "bg-lavender-100/45 dark:bg-lavender-950/40 backdrop-blur-md" : ""
+      className={`relative py-14 sm:py-20 px-6 sm:px-10 ${
+        alt
+          ? "bg-lavender-100/80 dark:bg-lavender-950/75"
+          : "bg-lavender-50/60 dark:bg-lavender-900/45"
       }`}
     >
       <div className="relative max-w-6xl mx-auto rv">
-        {/* localized halo behind the section heading so titles always read */}
-        {!alt && (
-          <div
-            aria-hidden="true"
-            className={`pointer-events-none absolute inset-x-0 top-0 h-44 ${
-              center
-                ? "[background:radial-gradient(40%_75%_at_50%_50%,rgba(250,250,252,0.72),transparent_75%)] dark:[background:radial-gradient(40%_75%_at_50%_50%,rgba(26,24,48,0.80),transparent_75%)]"
-                : "[background:radial-gradient(35%_70%_at_18%_50%,rgba(250,250,252,0.72),transparent_75%)] dark:[background:radial-gradient(35%_70%_at_18%_50%,rgba(26,24,48,0.80),transparent_75%)]"
-            }`}
-          />
-        )}
         <div className={`relative mb-12 ${center ? "text-center" : ""}`}>
-          <span className="sec-num text-lavender-500 dark:text-lavender-400 block mb-2 [text-shadow:0_1px_14px_rgba(250,250,252,0.7)] dark:[text-shadow:0_1px_14px_rgba(26,24,48,0.8)]">{num}</span>
-          <h2 className={`text-3xl sm:text-4xl font-extrabold tracking-[-0.03em] text-lavender-800 dark:text-lavender-50 [text-shadow:0_1px_24px_rgba(250,250,252,0.75)] dark:[text-shadow:0_1px_24px_rgba(26,24,48,0.85)] ${icon ? "inline-flex items-center gap-3" : ""}`}>
-            {icon && <span className="text-iris dark:text-iris-light">{icon}</span>}
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.03em] text-lavender-700 dark:text-lavender-50">
             {title}
           </h2>
         </div>

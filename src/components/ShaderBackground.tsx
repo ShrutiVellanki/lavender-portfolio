@@ -57,7 +57,7 @@ float fbm(vec2 p) {
   float v = 0.0;
   float a = 0.5;
   mat2 rot = mat2(0.8, -0.6, 0.6, 0.8);
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 3; i++) {
     v += a * vnoise(p);
     p = rot * p * 2.02;
     a *= 0.5;
@@ -265,12 +265,15 @@ function WebGLBackground({ dark }: { dark: boolean }) {
       mouse.x = e.clientX / window.innerWidth;
       mouse.y = 1.0 - e.clientY / window.innerHeight;
     };
+    /* scrollHeight forces layout when read; cache it and refresh on resize */
+    let maxScroll = 0;
     const onScroll = () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      scrollN = h > 0 ? window.scrollY / h : 0;
+      scrollN = maxScroll > 0 ? window.scrollY / maxScroll : 0;
     };
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    /* DPR capped at 1: the noise field is soft, so extra resolution is
+       invisible but the fragment cost scales with pixel count */
+    const dpr = 1;
     const resize = () => {
       const w = Math.floor(window.innerWidth * dpr);
       const h = Math.floor(window.innerHeight * dpr);
@@ -279,6 +282,7 @@ function WebGLBackground({ dark }: { dark: boolean }) {
         canvas.height = h;
       }
       gl.viewport(0, 0, w, h);
+      maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     };
 
     window.addEventListener("resize", resize);
@@ -292,8 +296,8 @@ function WebGLBackground({ dark }: { dark: boolean }) {
     let lastT = 0;
 
     const render = (now: number) => {
-      /* throttle to ~45fps for battery */
-      if (now - lastT < 22) {
+      /* throttle to ~30fps — the aurora drifts slowly, so this is invisible */
+      if (now - lastT < 33) {
         raf = requestAnimationFrame(render);
         return;
       }
