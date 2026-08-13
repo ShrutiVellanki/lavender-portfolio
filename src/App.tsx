@@ -329,11 +329,9 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
         Change a token below and the whole page updates.
       </p>
 
-      {/* Two columns in the wide desktop dialog: controls left, specimen right */}
-      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
       {/* Specimen */}
       <div
-        className="mt-5 lg:order-2 border border-lavender-300/70 dark:border-lavender-700/30 bg-lavender-100/80 dark:bg-lavender-900/70 p-4 transition-[border-radius] duration-300"
+        className="mt-5 border border-lavender-300/70 dark:border-lavender-700/30 bg-lavender-100/80 dark:bg-lavender-900/70 p-4 transition-[border-radius] duration-300"
         style={{ borderRadius: r + 6 }}
       >
         <div
@@ -357,7 +355,7 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
       </div>
 
       {/* Controls */}
-      <div className="mt-5 lg:order-1 space-y-4">
+      <div className="mt-5 space-y-4">
         <div>
           <span className="block text-[11px] font-mono font-medium text-lavender-700 dark:text-lavender-300 mb-2">--color-accent</span>
           <div className="flex items-center gap-2.5">
@@ -431,12 +429,11 @@ function TokenPlayground({ accent, onAccentChange, radius, onRadiusChange, dark,
           --color-{accent}: <span className="font-bold" style={{ color: dark ? t.hexDark : t.inkHex }}>{hex}</span>; --radius: {r}px; --theme: {dark ? "dark" : "light"};
         </p>
       </div>
-      </div>
     </div>
   );
 }
 
-/* ─── Token modal — bottom sheet on mobile, centered dialog on desktop ─── */
+/* ─── Token modal — bottom sheet on mobile, non-blocking side panel on desktop ─── */
 
 function TokenModal({ accent, onAccentChange, radius, onRadiusChange, dark, onToggleTheme }: {
   accent: Accent;
@@ -446,45 +443,66 @@ function TokenModal({ accent, onAccentChange, radius, onRadiusChange, dark, onTo
   dark: boolean;
   onToggleTheme: () => void;
 }) {
-  // The playground auto-opens as a modal on load — a bottom sheet on small
-  // screens, a centered dialog on large ones — and the palette FAB re-opens
-  // it after dismissal. One state drives both presentations.
+  // The playground auto-opens on load — a modal bottom sheet on small screens,
+  // a non-blocking bottom-right panel on large ones — and the palette FAB
+  // re-opens it after dismissal. One state drives both presentations.
   const [open, setOpen] = useState(true);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
 
-  // Modal a11y: lock body scroll, close on Escape, move focus in on open
-  // and back to the FAB on close.
+  // Tracks the lg breakpoint (64rem): only the mobile sheet is a true modal.
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 64rem)").matches
+  );
   useEffect(() => {
-    if (!open) return;
+    const mq = window.matchMedia("(min-width: 64rem)");
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  // Closing (X, Escape, backdrop) hands focus to the FAB that replaces it.
+  const close = () => {
+    setOpen(false);
+    requestAnimationFrame(() => fabRef.current?.focus());
+  };
+
+  // Mobile sheet a11y only: lock body scroll, close on Escape anywhere, move
+  // focus in on open and back to the FAB on close. The desktop panel is
+  // non-blocking, so the page keeps scrolling and focus is never stolen.
+  useEffect(() => {
+    if (!open || isDesktop) return;
     document.body.style.overflow = "hidden";
     closeBtnRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
-      fabRef.current?.focus();
     };
-  }, [open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, isDesktop]);
 
   const t = TOKENS[accent];
   const dotColor = dark ? t.hexDark : t.hex;
 
   return open ? (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center lg:items-center lg:p-8">
+    <div className="fixed inset-0 z-[70] flex items-end justify-center lg:inset-auto lg:bottom-6 lg:right-6 lg:block">
       <div
-        className="backdrop-in absolute inset-0 bg-lavender-950/50"
-        onClick={() => setOpen(false)}
+        className="backdrop-in absolute inset-0 bg-lavender-950/50 lg:hidden"
+        onClick={close}
         aria-hidden="true"
       />
       <div
         role="dialog"
-        aria-modal="true"
+        aria-modal={isDesktop ? undefined : true}
         aria-labelledby="token-sheet-title"
-        className="sheet-in relative w-full lg:w-[640px] max-h-[85dvh] lg:max-h-[calc(100vh-6rem)] overflow-y-auto bg-white dark:bg-lavender-950 border-t lg:border border-lavender-300/80 dark:border-lavender-700/40 shadow-[0_-8px_32px_rgba(35,33,54,0.25)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] rounded-t-[calc(var(--card-r,12px)+4px)] lg:rounded-[calc(var(--card-r,12px)+4px)] pb-[env(safe-area-inset-bottom)] lg:pb-0 transition-[border-radius] duration-300"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") close();
+        }}
+        className="sheet-in relative w-full lg:w-[400px] max-h-[85dvh] lg:max-h-[calc(100vh-6rem)] overflow-y-auto bg-white dark:bg-lavender-950 border-t lg:border border-lavender-300/80 dark:border-lavender-700/40 shadow-[0_-8px_32px_rgba(35,33,54,0.25)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] rounded-t-[calc(var(--card-r,12px)+4px)] lg:rounded-[calc(var(--card-r,12px)+4px)] pb-[env(safe-area-inset-bottom)] lg:pb-0 transition-[border-radius] duration-300"
       >
         <div className="sticky top-0 z-10 flex items-center gap-2.5 px-5 py-4 bg-white dark:bg-lavender-950 border-b border-lavender-200/80 dark:border-lavender-700/25">
           <span aria-hidden="true" className="w-2.5 h-2.5 rounded-full transition-colors duration-300" style={{ backgroundColor: dotColor }} />
@@ -492,7 +510,7 @@ function TokenModal({ accent, onAccentChange, radius, onRadiusChange, dark, onTo
           <button
             ref={closeBtnRef}
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={close}
             aria-label="Close design tokens"
             className={`ml-auto -mr-2 p-2 rounded-lg text-lavender-600 dark:text-lavender-400 ${A[accent].hoverText} ${A[accent].hoverBg} transition-colors`}
           >
