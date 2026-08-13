@@ -635,13 +635,13 @@ export default function App() {
 
       <main id="main">
         {/* ══════════════ HERO ══════════════ */}
-        <section id="about" className="relative pt-28 pb-8 sm:pt-32 sm:pb-12 px-6 sm:px-10 bg-lavender-100/70 dark:bg-lavender-950/65">
+        <section id="about" className="hero-full relative flex items-center pt-20 pb-10 sm:pt-24 sm:pb-12 px-6 sm:px-10 bg-lavender-100/70 dark:bg-lavender-950/65">
           {/* soft radial halo behind hero text — invisible card, real contrast */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 [background:radial-gradient(75%_65%_at_30%_50%,rgba(250,250,252,0.78),rgba(250,250,252,0.30)_55%,transparent_80%)] dark:[background:radial-gradient(75%_65%_at_30%_50%,rgba(26,24,48,0.85),rgba(26,24,48,0.35)_55%,transparent_80%)]"
           />
-          <div className="relative max-w-6xl mx-auto">
+          <div className="relative w-full max-w-6xl mx-auto">
             <div className="hero-in">
               <p className={`sec-num ${A[accent].text} mb-6 transition-colors duration-300 [text-shadow:0_1px_22px_rgba(250,250,252,0.85),0_0_2px_rgba(250,250,252,0.6)] dark:[text-shadow:0_1px_22px_rgba(26,24,48,0.9),0_0_2px_rgba(26,24,48,0.7)]`}>
                 Product Engineer · Toronto

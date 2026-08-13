@@ -105,6 +105,12 @@ body {
 .js .sg.show > *:nth-child(6) { transition-delay: 0.3s; }
 .js .sg.show > *:nth-child(7) { transition-delay: 0.36s; }
 
+/* ── Hero fills the first viewport (dvh with vh fallback for older Safari) ── */
+.hero-full {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 /* ── Hero entrance ── */
 .hero-in > * {
   opacity: 0;
