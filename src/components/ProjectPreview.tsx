@@ -212,14 +212,10 @@ export function RecipePreview({ accent, className }: PreviewProps) {
         <rect x="44" y="194" width="48" height="3" rx="1.5" fill="#dfdee8" />
       </g>
 
-      {/* arrow + AI badge */}
+      {/* arrow */}
       <g>
         <line x1="170" y1="125" x2="220" y2="125" stroke={c.solid} strokeWidth="1.5" strokeDasharray="3 3" />
         <polygon points="220,120 230,125 220,130" fill={c.solid} />
-        <rect x="178" y="105" width="42" height="16" rx="8" fill={c.solid} />
-        <text x="199" y="116" textAnchor="middle" fontFamily="ui-monospace, SFMono-Regular, monospace" fontSize="8" fontWeight="600" fill="#fff" letterSpacing="0.5">
-          GPT-5
-        </text>
       </g>
 
       {/* right: structured output cards */}

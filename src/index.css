@@ -3,7 +3,20 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* One family, chosen for voice: Atkinson Hyperlegible was drawn by the
+     Braille Institute for low-vision readers. Hierarchy comes from weight
+     (300 → 800) and size, not from a second face. */
+  --font-sans: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Monochrome core — swapped wholesale in dark mode */
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: #0a0a0a;
+  --color-slab: var(--slab);
+  --color-on-slab: var(--on-slab);
 
   --color-lavender-50: #fafafc;
   --color-lavender-100: #f3f2f7;
@@ -41,6 +54,51 @@
   --color-rose-ink: #a35450;
 }
 
+:root {
+  --ink: #0a0a0a; --paper: #ffffff; --muted: #4d4d4d;
+  /* One yellow for every fill (buttons, chips, active nav, pin): --accent-soft.
+     The saturated --accent is only for yellow text on black and the progress bar. */
+  --accent: #ffd400;
+  --accent-soft: #fff0a3;
+  --accent-soft-hover: #ffe680;
+  --slab: #0a0a0a; --on-slab: #fafafa;
+  color-scheme: light;
+}
+:root.dark {
+  --ink: #f5f5f5; --paper: #0a0a0a; --muted: #b3b3b3;
+  /* the closing slab stays dark instead of inverting to a glare block */
+  --slab: #161616; --on-slab: #f5f5f5;
+  color-scheme: dark;
+}
+
+
+
+/* ── Lightbulb theme icon: glass is bright yellow when on, gray when off ── */
+.bulb .bulb-glass { transition: fill 0.16s ease-out; }
+.bulb.is-on .bulb-glass { fill: var(--accent); }
+.bulb.is-off .bulb-glass { fill: #9e9e9e; }
+
+/* Components layer, so Tailwind utilities (md:hidden, ml-3…) still win */
+@layer components {
+/* ── Round buttons: pale-yellow disc, 2px ink outline. Calm hover: the fill deepens. ── */
+.toon {
+  display: grid; place-items: center;
+  width: 2.75rem; height: 2.75rem; border-radius: 9999px;
+  background: var(--accent-soft); color: #0a0a0a;
+  border: 2px solid var(--ink);
+  transition: background-color 0.15s ease-out, transform 0.12s ease-out;
+}
+.toon:hover, .group:hover > .toon, .group:focus-visible > .toon { background: var(--accent-soft-hover); }
+.toon:active, .group:active > .toon { transform: scale(0.94); }
+.toon-lg { width: 3rem; height: 3rem; }
+}
+
+
+
+/* Project previews: strip colour, invert for the dark theme */
+.mono-img { filter: grayscale(1) contrast(1.08); }
+.dark .mono-img { filter: grayscale(1) invert(1) contrast(1.05); }
+
 html {
   scroll-behavior: smooth;
   /* Slightly enlarged base (18px) — generous but conventional */
@@ -62,17 +120,15 @@ body {
 
 @layer base {
   /* Selection + focus follow the live accent token (set by the token playground) */
-  ::selection { background-color: color-mix(in srgb, var(--accent, #907aa9) 20%, transparent); }
-  .dark ::selection { background-color: color-mix(in srgb, var(--accent-dark, #d4bdef) 22%, transparent); }
+  ::selection { background-color: var(--accent); color: #0a0a0a; }
 
   h1, h2, h3, h4 { text-wrap: balance; }
   p { text-wrap: pretty; }
 
   :where(a, button):focus-visible {
-    outline: 2px solid var(--accent, var(--color-iris));
-    outline-offset: 2px;
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
   }
-  .dark :where(a, button):focus-visible { outline-color: var(--accent-dark, var(--color-iris-light)); }
 }
 
 /* ── Progress bar ── */
@@ -112,17 +168,17 @@ body {
 }
 
 /* ── Hero entrance ── */
+/* Motion only moves content; it never hides it. If the animation is paused
+   (background tab, headless render) the hero is still fully readable. */
 .hero-in > * {
-  opacity: 0;
-  transform: translateY(28px);
-  animation: up 0.9s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  animation: up 1s cubic-bezier(0.19, 1, 0.22, 1) both;
 }
 .hero-in > *:nth-child(1) { animation-delay: 0.12s; }
 .hero-in > *:nth-child(2) { animation-delay: 0.28s; }
 .hero-in > *:nth-child(3) { animation-delay: 0.42s; }
 .hero-in > *:nth-child(4) { animation-delay: 0.56s; }
 .hero-in > *:nth-child(5) { animation-delay: 0.7s; }
-@keyframes up { to { opacity: 1; transform: translateY(0); } }
+@keyframes up { from { transform: translateY(32px); } to { transform: translateY(0); } }
 
 /* ── Token modal (bottom sheet on mobile, centered dialog on desktop) ── */
 @keyframes sheetUp {
@@ -170,8 +226,7 @@ body {
 .dark .geo-bg::before { opacity: 0.06; }
 
 /* ── Body fallback colour (covers paint before WebGL boots, & for no-WebGL clients) ── */
-body { background-color: #fafafc; }
-html.dark body { background-color: #232136; }
+body { background-color: var(--paper); color: var(--ink); }
 
 /* ── Crossword victory animations ── */
 @keyframes cwFadeIn {
@@ -234,6 +289,9 @@ html.dark body { background-color: #232136; }
     transform: none !important;
     animation: none !important;
   }
+  .toon { transition: none; }
+  .bulb * { transition: none !important; }
+  .toon:active, .group:active > .toon { transform: none; }
   .cw-fade-in, .cw-msg, .cw-heart, .cw-fall, .cw-shake, .cw-taunt-in {
     animation: none !important;
     opacity: 1 !important;
