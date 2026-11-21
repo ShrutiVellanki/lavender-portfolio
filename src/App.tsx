@@ -121,7 +121,7 @@ const SOCIALS = [
 
 const ABOUT = [
   { Icon: Compass, text: "I scope features with product and design, then build them end to end." },
-  { Icon: UsersRound, text: "I get feedback from real users and iterate." },
+  { Icon: UsersRound, text: "I run discovery and feedback sessions with accounting firms." },
   { Icon: Blocks, text: "I build shared pieces, like design systems, that other teams reuse." },
 ];
 
