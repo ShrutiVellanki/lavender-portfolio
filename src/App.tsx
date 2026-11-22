@@ -256,7 +256,11 @@ export default function App() {
     if (!mobileNav) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileNav(false); };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden"; // full-screen menu: keep the page behind it still
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
   }, [mobileNav]);
 
 
@@ -271,7 +275,7 @@ export default function App() {
 
 
       {/* ── Nav ── */}
-      <nav aria-label="Primary" className="fixed top-0 inset-x-0 z-50 bg-paper border-b-2 border-ink">
+      <nav aria-label="Primary" className="fixed top-0 inset-x-0 z-50 bg-band border-b-2 border-ink">
         <div className="px-5 sm:px-10">
           <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
             <a href="#" className="inline-flex items-center min-h-11 font-extrabold tracking-[-0.02em]">
@@ -285,7 +289,7 @@ export default function App() {
                       href={`#${s.id}`}
                       aria-current={active === s.id ? "true" : undefined}
                       className={`inline-flex items-center h-9 px-3 rounded-full text-[15px] font-semibold ${
-                        active === s.id ? "bg-accent-soft text-[#0a0a0a]" : "text-ink hover:bg-ink/5"
+                        active === s.id ? "bg-paper border-2 border-ink" : "border-2 border-transparent hover:border-ink/30"
                       }`}
                     >
                       {s.label}
@@ -297,13 +301,13 @@ export default function App() {
                 onClick={toggle}
                 aria-label={dark ? "Turn the lights on (light theme)" : "Turn the lights off (dark theme)"}
                 aria-pressed={!dark}
-                className="toon ml-3"
+                className="toon ml-3 bg-white dark:bg-accent-soft"
               >
                 <Bulb on={!dark} />
               </button>
               <button
                 onClick={() => setMobileNav(!mobileNav)}
-                className="toon md:hidden ml-3"
+                className="toon md:hidden ml-3 bg-white dark:bg-accent-soft"
                 aria-label={mobileNav ? "Close menu" : "Open menu"}
                 aria-expanded={mobileNav}
                 aria-controls="mobile-nav"
@@ -314,21 +318,33 @@ export default function App() {
           </div>
         </div>
         {mobileNav && (
-          <div id="mobile-nav" className="md:hidden border-t-2 border-ink bg-paper px-5 py-2">
+          <div id="mobile-nav" className="md:hidden sheet-in fixed inset-x-0 top-16 bottom-0 overflow-y-auto bg-band border-t-2 border-ink px-5 pt-4 pb-10 flex flex-col">
             <ul>
               {SECTIONS.map((s) => (
-                <li key={s.id}>
+                <li key={s.id} className="border-b border-ink/25">
                   <a
                     href={`#${s.id}`}
                     onClick={() => setMobileNav(false)}
                     aria-current={active === s.id ? "true" : undefined}
-                    className={`flex items-center w-fit -ml-3 px-3 min-h-12 rounded-full text-xl font-bold tracking-[-0.01em] ${active === s.id ? "bg-accent-soft text-[#0a0a0a]" : ""}`}
+                    className="flex items-center justify-between min-h-16 text-[2rem] font-extrabold tracking-[-0.03em]"
                   >
-                    {s.label}
+                    <span className={active === s.id ? "underline decoration-[3px] underline-offset-[8px]" : ""}>{s.label}</span>
+                    {active === s.id && <span className="text-[14px] font-semibold tracking-normal px-2.5 py-0.5 rounded-full bg-paper border-2 border-ink">You’re here</span>}
                   </a>
                 </li>
               ))}
             </ul>
+            <div className="mt-auto pt-10 flex items-center gap-4">
+              <a href={`mailto:${EMAIL}`} aria-label={`Email ${EMAIL}`} className="group inline-flex">
+                <span className="toon bg-white dark:bg-accent-soft"><Mail aria-hidden="true" className="w-5 h-5" /></span>
+              </a>
+              {SOCIALS.map(({ href, label, Icon }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="group inline-flex">
+                  <span className="toon bg-white dark:bg-accent-soft"><Icon className="w-[18px] h-[18px]" /></span>
+                  <span className="sr-only">{label} (opens in a new tab)</span>
+                </a>
+              ))}
+            </div>
           </div>
         )}
       </nav>
