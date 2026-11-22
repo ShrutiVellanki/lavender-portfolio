@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowUpRight, Menu, X, MapPin, Mail,
   Compass, UsersRound, Blocks, Workflow, LayoutDashboard, Component, Mic,
@@ -71,34 +71,6 @@ function useTheme() {
   const toggle = () => setDark((d) => !d);
 
   return { dark, toggle };
-}
-
-/* ─── Scroll progress (yellow) ─── */
-
-function ProgressBar() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      if (ref.current) ref.current.style.transform = `scaleX(${max > 0 ? window.scrollY / max : 0})`;
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    update();
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
-  return (
-    <div className="fixed top-0 inset-x-0 z-[60] h-1" aria-hidden="true">
-      <div ref={ref} className="progress-bar h-full bg-accent" style={{ transform: "scaleX(0)" }} />
-    </div>
-  );
 }
 
 /* ─── Data ─── */
@@ -297,7 +269,6 @@ export default function App() {
         Skip to content
       </a>
 
-      <ProgressBar />
 
       {/* ── Nav ── */}
       <nav aria-label="Primary" className="fixed top-0 inset-x-0 z-50 bg-paper border-b-2 border-ink">
@@ -307,6 +278,12 @@ export default function App() {
               Shruti Vellanki
             </a>
             <div className="flex items-center">
+              {/* Phones: the nav links live in the menu, so show the current section here */}
+              {SECTIONS.some((x) => x.id === active) && (
+                <span className="md:hidden mr-1 px-3 h-8 inline-flex items-center rounded-full bg-accent-soft text-[#0a0a0a] text-[14px] font-semibold">
+                  {SECTIONS.find((x) => x.id === active)?.label}
+                </span>
+              )}
               <ul className="hidden md:flex items-center gap-1">
                 {SECTIONS.map((s) => (
                   <li key={s.id}>

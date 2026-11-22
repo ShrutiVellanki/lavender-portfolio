@@ -134,8 +134,6 @@ body {
   }
 }
 
-/* ── Progress bar ── */
-.progress-bar { transform-origin: left; }
 
 /* ── Scroll reveal ──
    Hidden states are scoped to html.js (set in index.html) so content is
