@@ -278,12 +278,6 @@ export default function App() {
               Shruti Vellanki
             </a>
             <div className="flex items-center">
-              {/* Phones: the nav links live in the menu, so show the current section here */}
-              {SECTIONS.some((x) => x.id === active) && (
-                <span className="md:hidden mr-1 px-3 h-8 inline-flex items-center rounded-full bg-accent-soft text-[#0a0a0a] text-[14px] font-semibold">
-                  {SECTIONS.find((x) => x.id === active)?.label}
-                </span>
-              )}
               <ul className="hidden md:flex items-center gap-1">
                 {SECTIONS.map((s) => (
                   <li key={s.id}>
@@ -328,7 +322,7 @@ export default function App() {
                     href={`#${s.id}`}
                     onClick={() => setMobileNav(false)}
                     aria-current={active === s.id ? "true" : undefined}
-                    className={`flex items-center gap-3 min-h-12 text-xl font-bold tracking-[-0.01em] ${active === s.id ? "underline decoration-2 underline-offset-[6px]" : ""}`}
+                    className={`flex items-center w-fit -ml-3 px-3 min-h-12 rounded-full text-xl font-bold tracking-[-0.01em] ${active === s.id ? "bg-accent-soft text-[#0a0a0a]" : ""}`}
                   >
                     {s.label}
                   </a>
