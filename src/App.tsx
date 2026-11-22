@@ -127,7 +127,7 @@ const ABOUT = [
 
 type Role = { title: string; company: string; period: string; description: string; tags: string[] };
 
-/* Company label + total years for the timeline; roles are matched by `company`. */
+/* Company label + total years; roles are matched by `company`. */
 const COMPANIES: { name: string; period: string }[] = [
   { name: "Ascend · Remote", period: "2026–now" },
   { name: "Gen", period: "2022–2026" },
@@ -413,31 +413,40 @@ export default function App() {
 
         {/* ══════════════ WORK ══════════════ */}
         <Section id="work" title="Work">
-          {/* One continuous timeline: a big dot per company, small dots for each role there. */}
-          <ol className="relative">
-            <span aria-hidden="true" className="absolute left-[11px] top-3 bottom-3 w-0.5 bg-ink" />
+          <ol>
             {COMPANIES.map((c, ci) => {
               const roles = WORK.filter((r) => r.company === c.name);
+              const multi = roles.length > 1;
               return (
-                <li key={c.name} className={`relative pl-12 ${ci ? "pt-10" : ""}`}>
-                  <span aria-hidden="true" className="absolute left-0 top-[0.3rem] w-6 h-6 rounded-full bg-accent-soft border-2 border-ink" />
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 className="text-[1.45rem] font-extrabold leading-tight tracking-[-0.02em]">{c.name}</h3>
-                    <span className={`text-[15px] font-semibold tabular-nums ${ci === 0 ? "px-2 rounded-full bg-accent-soft text-on-accent" : "text-muted"}`}>{c.period}</span>
-                  </div>
-                  <ol className="mt-4 space-y-7">
-                    {roles.map((r) => (
-                      <li key={r.title} className="relative">
-                        <span aria-hidden="true" className="absolute -left-[2.6rem] top-[0.55rem] w-3 h-3 rounded-full bg-paper border-2 border-ink" />
-                        <div className="flex flex-wrap items-baseline gap-x-3">
-                          <h4 className="text-[1.15rem] font-bold leading-snug">{r.title}</h4>
-                          {roles.length > 1 && <span className="text-[15px] text-muted tabular-nums">{r.period}</span>}
-                        </div>
-                        <p className="mt-2 text-[17px] leading-relaxed max-w-[62ch]">{r.description}</p>
-                        <p className="mt-2 text-[15px] text-muted">{r.tags.join(", ")}</p>
-                      </li>
-                    ))}
-                  </ol>
+                <li key={c.name} className={`grid sm:grid-cols-[7rem_1fr] gap-x-8 gap-y-1 py-8 ${ci ? "border-t border-ink" : "pt-0 sm:pt-2"}`}>
+                  <span className="text-[16px] font-medium text-muted tabular-nums sm:pt-1">
+                    {ci === 0 ? <span className="inline-block px-2 rounded-full bg-accent-soft text-on-accent font-bold">{c.period}</span> : c.period}
+                  </span>
+                  {multi ? (
+                    /* Several roles at one company: a short timeline under the company name */
+                    <div>
+                      <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{c.name}</h3>
+                      <ol className="relative mt-4 pl-7 space-y-6">
+                        <span aria-hidden="true" className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-ink" />
+                        {roles.map((r) => (
+                          <li key={r.title} className="relative">
+                            <span aria-hidden="true" className="absolute -left-7 top-[0.45rem] w-3 h-3 rounded-full bg-accent-soft border-2 border-ink" />
+                            <h4 className="text-[1.15rem] font-bold leading-snug">{r.title}</h4>
+                            <p className="text-[15px] text-muted tabular-nums">{r.period}</p>
+                            <p className="mt-2 text-[17px] leading-relaxed max-w-[62ch]">{r.description}</p>
+                            <p className="mt-2 text-[15px] text-muted">{r.tags.join(", ")}</p>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ) : (
+                    <div>
+                      <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{roles[0].title}</h3>
+                      <p className="text-[16px] text-muted">{c.name}</p>
+                      <p className="mt-3 text-[17px] leading-relaxed max-w-[62ch]">{roles[0].description}</p>
+                      <p className="mt-3 text-[15px] text-muted">{roles[0].tags.join(", ")}</p>
+                    </div>
+                  )}
                 </li>
               );
             })}
