@@ -515,35 +515,31 @@ export default function App() {
         </Section>
 
         {/* ══════════════ CONTACT ══════════════ */}
-        <section id="contact" aria-labelledby="contact-h" className="scroll-mt-16 px-5 sm:px-10 bg-slab text-on-slab">
-          <div className="max-w-6xl mx-auto pt-20 pb-24 sm:pt-28 sm:pb-32">
-            <h2 id="contact-h" className="text-[clamp(2.25rem,4.5vw,3.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">Let’s talk!</h2>
-            <p className="mt-6 max-w-[48ch] text-xl leading-relaxed opacity-85">
-              Happy to chat with AI builders, product people, or anyone who knows a good coffee shop.
-            </p>
-            <p className="mt-8 text-[clamp(1.35rem,2.6vw,2rem)] font-bold tracking-[-0.02em] [overflow-wrap:anywhere]">
-              <a href={`mailto:${EMAIL}`} className="group inline-flex flex-wrap items-center gap-x-2 text-accent underline decoration-2 underline-offset-[6px] decoration-accent/40 hover:decoration-accent transition-[text-decoration-color] duration-200">
-                {EMAIL}
-              </a>
-            </p>
-          </div>
-        </section>
+        <Section id="contact" title="Let’s talk!">
+          <p className="max-w-[44ch] text-[clamp(1.15rem,1.8vw,1.35rem)] leading-[1.5]">
+            Happy to chat with AI builders, product people, or anyone who knows a good coffee shop.
+          </p>
+          <a href={`mailto:${EMAIL}`} className="group mt-8 inline-flex items-center gap-4 min-h-11 [overflow-wrap:anywhere]">
+            <span className="toon shrink-0"><Mail aria-hidden="true" className="w-5 h-5" /></span>
+            <span className="text-[clamp(1.25rem,2.2vw,1.6rem)] font-bold tracking-[-0.015em] underline decoration-2 underline-offset-[6px] decoration-ink/30 group-hover:decoration-ink transition-[text-decoration-color] duration-200">{EMAIL}</span>
+          </a>
+        </Section>
       </main>
 
-      <footer className="px-5 sm:px-10 bg-slab text-on-slab">
-        <div className="max-w-6xl mx-auto border-t border-on-slab/25 py-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end text-[15px]">
+      <footer className="px-5 sm:px-10">
+        <div className="max-w-6xl mx-auto border-t-2 border-ink py-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end text-[15px]">
           <div className="space-y-2">
-            <p className="opacity-75">© {new Date().getFullYear()} Shruti Vellanki</p>
+            <p className="text-muted">© {new Date().getFullYear()} Shruti Vellanki</p>
           </div>
           <div className="flex flex-wrap items-center gap-x-6">
             {SOCIALS.map(({ href, label }) => (
-              <ExtLink key={label} href={href} className="hover:text-accent">
+              <ExtLink key={label} href={href} className="font-semibold hover:underline underline-offset-4 decoration-2">
                 {label}
               </ExtLink>
             ))}
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" })}
-              className="inline-flex items-center min-h-11 font-semibold hover:text-accent"
+              className="inline-flex items-center min-h-11 font-semibold hover:underline underline-offset-4 decoration-2"
             >
               Back to top ↑
             </button>
