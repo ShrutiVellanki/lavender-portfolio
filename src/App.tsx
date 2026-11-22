@@ -506,7 +506,7 @@ export default function App() {
             Happy to chat with AI builders, product people, or anyone who knows a good coffee shop.
           </p>
           <a href={`mailto:${EMAIL}`} className="group mt-8 inline-flex items-center gap-4 min-h-11 [overflow-wrap:anywhere]">
-            <span className="toon shrink-0 bg-white"><Mail aria-hidden="true" className="w-5 h-5" /></span>
+            <span className="toon shrink-0"><Mail aria-hidden="true" className="w-5 h-5" /></span>
             <span className="text-[clamp(1.25rem,2.2vw,1.6rem)] font-bold tracking-[-0.015em] underline decoration-2 underline-offset-[6px] decoration-ink/30 group-hover:decoration-ink transition-[text-decoration-color] duration-200">{EMAIL}</span>
           </a>
         </Section>
