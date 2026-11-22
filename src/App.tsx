@@ -411,21 +411,18 @@ export default function App() {
                   </span>
                   {multi ? (
                     /* Several roles at one company: a short timeline under the company name */
-                    <div>
-                      <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{c.name}</h3>
-                      <ol className="relative mt-4 pl-7 space-y-6">
-                        <span aria-hidden="true" className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-ink" />
-                        {roles.map((r) => (
-                          <li key={r.title} className="relative">
-                            <span aria-hidden="true" className="absolute -left-7 top-[0.45rem] w-3 h-3 rounded-full bg-accent-soft border-2 border-ink" />
-                            <h4 className="text-[1.15rem] font-bold leading-snug">{r.title}</h4>
-                            <p className="text-[15px] text-muted tabular-nums">{r.period}</p>
-                            <p className="mt-2 text-[17px] leading-relaxed max-w-[62ch]">{r.description}</p>
-                            <p className="mt-2 text-[15px] text-muted">{r.tags.join(", ")}</p>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
+                    <ol className="relative pl-7 space-y-8">
+                      <span aria-hidden="true" className="absolute left-[5px] top-3 bottom-3 w-0.5 bg-ink" />
+                      {roles.map((r) => (
+                        <li key={r.title} className="relative">
+                          <span aria-hidden="true" className="absolute -left-7 top-[0.55rem] w-3 h-3 rounded-full bg-accent-soft border-2 border-ink" />
+                          <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{r.title}</h3>
+                          <p className="text-[16px] text-muted tabular-nums">{c.name} · {r.period}</p>
+                          <p className="mt-3 text-[17px] leading-relaxed max-w-[62ch]">{r.description}</p>
+                          <p className="mt-3 text-[15px] text-muted">{r.tags.join(", ")}</p>
+                        </li>
+                      ))}
+                    </ol>
                   ) : (
                     <div>
                       <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{roles[0].title}</h3>
