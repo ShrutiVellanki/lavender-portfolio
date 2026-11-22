@@ -231,11 +231,11 @@ function ExtLink({ href, children, className = "", arrow = true }: { href: strin
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className={`group inline-flex items-center gap-1.5 min-h-11 ${className}`}
+      className={`group/link inline-flex items-center gap-1.5 min-h-11 ${className}`}
     >
       {children}
       {external && <span className="sr-only"> (opens in a new tab)</span>}
-      {arrow && <ArrowUpRight aria-hidden="true" className="w-[1em] h-[1em] transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />}
+      {arrow && <ArrowUpRight aria-hidden="true" className="w-[1em] h-[1em] transition-transform duration-300 ease-out group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />}
     </a>
   );
 }
@@ -437,14 +437,21 @@ export default function App() {
                 <p className="inline-flex items-center gap-2 text-[16px] font-medium text-muted">
                   <featured.KindIcon aria-hidden="true" className="w-4 h-4" /> {featured.kind}
                 </p>
-                <h3 className="text-[clamp(1.9rem,3.5vw,2.6rem)] font-extrabold leading-[1] tracking-[-0.03em]">{featured.title}</h3>
+                <h3 className="text-[clamp(1.9rem,3.5vw,2.6rem)] font-extrabold leading-[1] tracking-[-0.03em]">
+                  <a href={featured.github} target="_blank" rel="noopener noreferrer" className="group/title inline-flex items-baseline gap-2 decoration-2 underline-offset-[6px] hover:underline">
+                    {featured.title}
+                    <ArrowUpRight aria-hidden="true" className="w-[0.6em] h-[0.6em] self-center transition-transform duration-300 ease-out group-hover/title:-translate-y-0.5 group-hover/title:translate-x-0.5" />
+                    <span className="sr-only"> (code on GitHub, opens in a new tab)</span>
+                  </a>
+                </h3>
                 <p className="mt-3 text-[17px] leading-relaxed max-w-[56ch]">{featured.description}</p>
                 <p className="mt-3 text-[15px] text-muted">{featured.tags.join(", ")}</p>
               </div>
-              <div className="flex gap-6 font-semibold">
-                <ExtLink href={featured.github} className={linkU}>Code</ExtLink>
-                {featured.live && <ExtLink href={featured.live} className={linkU}>Live</ExtLink>}
-              </div>
+              {featured.live && (
+                <div className="flex gap-6 font-semibold">
+                  <ExtLink href={featured.live} className={linkU}>Live site</ExtLink>
+                </div>
+              )}
             </div>
           </article>
 
@@ -461,13 +468,20 @@ export default function App() {
                 <p className="mt-5 inline-flex items-center gap-2 text-[16px] font-medium text-muted">
                   <p.KindIcon aria-hidden="true" className="w-4 h-4" /> {p.kind}
                 </p>
-                <h3 className="text-[1.6rem] font-extrabold leading-tight tracking-[-0.02em]">{p.title}</h3>
+                <h3 className="text-[1.6rem] font-extrabold leading-tight tracking-[-0.02em]">
+                  <a href={p.github} target="_blank" rel="noopener noreferrer" className="group/title inline-flex items-baseline gap-2 decoration-2 underline-offset-[6px] hover:underline">
+                    {p.title}
+                    <ArrowUpRight aria-hidden="true" className="w-[0.6em] h-[0.6em] self-center transition-transform duration-300 ease-out group-hover/title:-translate-y-0.5 group-hover/title:translate-x-0.5" />
+                    <span className="sr-only"> (code on GitHub, opens in a new tab)</span>
+                  </a>
+                </h3>
                 <p className="mt-2 text-[17px] leading-relaxed">{p.description}</p>
                 <p className="mt-3 text-[15px] text-muted">{p.tags.join(", ")}</p>
-                <div className="mt-auto pt-4 flex gap-6 font-semibold">
-                  <ExtLink href={p.github} className={linkU}>Code</ExtLink>
-                  {p.live && <ExtLink href={p.live} className={linkU}>Live</ExtLink>}
-                </div>
+                {p.live && (
+                  <div className="mt-auto pt-4 flex gap-6 font-semibold">
+                    <ExtLink href={p.live} className={linkU}>Live site</ExtLink>
+                  </div>
+                )}
               </article>
             ))}
           </div>
