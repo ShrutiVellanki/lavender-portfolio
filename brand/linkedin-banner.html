@@ -1,38 +1,21 @@
-<!doctype html>
-<html><head><meta charset="utf-8">
+<!doctype html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&display=block" rel="stylesheet">
 <style>
-  :root { --ink:#0a0a0a; --soft:#fff0a3; --muted:#4d4d4d; }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  html,body { width:1584px; height:396px; overflow:hidden; background:#fff; }
-  body { font-family:"Atkinson Hyperlegible Next", system-ui, sans-serif; color:var(--ink); position:relative; }
-  .disc { display:grid; place-items:center; border-radius:9999px; background:var(--soft); border:2.5px solid var(--ink); }
-  /* playful oversized disc, top-left, partly behind the profile photo */
-  .big { position:absolute; left:-110px; top:-150px; width:420px; height:420px; }
-  .big svg { position:absolute; left:205px; top:220px; }
-  .small-a { position:absolute; left:330px; top:44px; width:36px; height:36px; }
-  .content { position:absolute; left:640px; right:96px; top:0; bottom:0; display:flex; flex-direction:column; justify-content:center; }
-  .kicker { display:flex; align-items:center; gap:10px; font-size:24px; font-weight:500; color:var(--muted); }
-  h1 { margin-top:14px; font-size:62px; line-height:1.05; font-weight:800; letter-spacing:-0.035em; white-space:nowrap; }
-  .row { margin-top:30px; display:flex; align-items:center; gap:16px; }
-  .row .disc { width:54px; height:54px; }
-  .url { margin-left:14px; font-size:24px; font-weight:700; text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:6px; }
-  .rule { position:absolute; left:0; right:0; bottom:0; height:6px; background:var(--ink); }
-</style></head>
-<body>
-  <div class="disc big">
-    <svg viewBox="0 0 24 24" width="110" height="110" fill="none" stroke="#0a0a0a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5Z" fill="#ffd400"/><path d="M9 18h6M10 22h4"/></svg>
-  </div>
-  <div class="disc small-a"></div>
-  <div class="content">
-    <p class="kicker"><svg viewBox="0 0 24 24" width="24" height="24" fill="#fff0a3" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Product engineer · Toronto</p>
-    <h1>Building an AI platform<br>for accounting firms.</h1>
-    <div class="row">
-      <span class="disc"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/></svg></span>
-      <span class="disc"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg></span>
-      <span class="disc"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"/><rect x="14" y="2" width="8" height="8" rx="1"/></svg></span>
-      <span class="url">shrutivellanki.com</span>
-    </div>
-  </div>
-  <div class="rule"></div>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1584px;height:396px;overflow:hidden;background:#f3f3f1}
+body{font-family:"Atkinson Hyperlegible Next",system-ui,sans-serif;color:#0a0a0a;position:relative}
+.edge{position:absolute;left:0;right:0;bottom:0;height:4px;background:#0a0a0a}
+.c{position:absolute;left:600px;right:64px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center}
+.k{display:flex;align-items:center;gap:8.8px;font-size:22px;font-weight:500;color:#4d4d4d}
+h1{margin-top:10.08px;font-size:84px;line-height:.95;font-weight:800;letter-spacing:-.035em}
+p.l{margin-top:19.599999999999998px;font-size:28px;line-height:1.3;font-weight:400;letter-spacing:-.01em}
+.u{margin-top:25.2px;font-size:22px;font-weight:700;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px;text-decoration-color:#0a0a0a55}
+</style></head><body>
+<div class="c">
+  <p class="k"><svg viewBox="0 0 24 24" width="25" height="25" fill="#fff0a3" stroke="#0a0a0a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Toronto</p>
+  <h1>Shruti Vellanki</h1>
+  <p class="l">Product engineer. Currently building an AI platform for accounting firms.</p>
+  <p class="u">shrutivellanki.com</p>
+</div>
+<div class="edge"></div>
 </body></html>
