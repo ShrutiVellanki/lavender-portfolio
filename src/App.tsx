@@ -101,7 +101,7 @@ type Role = { title: string; company: string; period: string; description: strin
 
 /* Company label + total years; roles are matched by `company`. */
 const COMPANIES: { name: string; period: string }[] = [
-  { name: "Ascend · Remote", period: "2026–now" },
+  { name: "Ascend", period: "2026–now" },
   { name: "Gen", period: "2022–2026" },
   { name: "Fiix by Rockwell Automation", period: "2021–2022" },
   { name: "Veriday Inc", period: "2021" },
@@ -110,7 +110,7 @@ const COMPANIES: { name: string; period: string }[] = [
 const WORK: Role[] = [
   {
     title: "Product Engineer, AI Team",
-    company: "Ascend · Remote",
+    company: "Ascend",
     period: "2026–now",
     description: "Own an AI-native tax planning workflow in production, from discovery and UX to AI systems design: tool calls, system prompts, model selection, context management and output refinement. Run discovery directly with partner accounting firms and product leadership, prototyping to validate ideas before they're built.",
     tags: ["Evals", "AI systems design", "Prompting", "Tool calling", "Product discovery"],
@@ -225,7 +225,7 @@ function ExtLink({ href, children, className = "", arrow = true }: { href: strin
 function Section({ id, title, wide, band, children }: { id: string; title: string; wide?: boolean; band?: boolean; children: React.ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-h`} className={`scroll-mt-16 px-5 sm:px-10 ${band ? "bg-band" : ""}`}>
-      <div className={`max-w-6xl mx-auto grid lg:grid-cols-12 gap-x-10 gap-y-10 ${band ? "pt-16 sm:pt-20 pb-16 sm:pb-20" : "border-t-2 border-ink pt-8 pb-20 sm:pb-28"}`}>
+      <div className={`max-w-6xl mx-auto grid lg:grid-cols-12 gap-x-10 gap-y-10 ${band ? "pt-16 sm:pt-20 pb-20 sm:pb-28" : "border-t-2 border-ink pt-8 pb-20 sm:pb-28"}`}>
         <h2 id={`${id}-h`} className={`${wide ? "lg:col-span-12" : "lg:col-span-4 lg:sticky lg:top-24"} self-start text-[clamp(2.25rem,4.5vw,3.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]`}>
           {title}
         </h2>
@@ -405,31 +405,37 @@ export default function App() {
               const roles = WORK.filter((r) => r.company === c.name);
               const multi = roles.length > 1;
               return (
-                <li key={c.name} className={`grid sm:grid-cols-[7rem_1fr] gap-x-8 gap-y-1 py-8 ${ci ? "border-t border-ink" : "pt-0 sm:pt-2"}`}>
-                  <span className="text-[16px] font-medium text-muted tabular-nums sm:pt-1">
-                    {ci === 0 ? <span className="inline-block px-2 rounded-full bg-accent-soft text-on-accent font-bold">{c.period}</span> : c.period}
-                  </span>
+                <li key={c.name} className={`py-8 last:pb-0 ${ci ? "border-t border-ink" : "pt-0 sm:pt-2"} ${multi ? "" : "grid sm:grid-cols-[7rem_1fr] gap-x-8 gap-y-1"}`}>
                   {multi ? (
-                    /* Several roles at one company: a short timeline under the company name */
-                    <ol className="relative pl-7 space-y-8">
-                      <span aria-hidden="true" className="absolute left-[5px] top-3 bottom-3 w-0.5 bg-ink" />
+                    /* Several roles at one company: each role's dates sit in the left column,
+                       joined by a short line running down the gutter */
+                    <ol className="relative space-y-8">
+                      <span aria-hidden="true" className="hidden sm:block absolute left-[calc(8rem-1px)] top-3 bottom-3 w-0.5 bg-ink" />
                       {roles.map((r) => (
-                        <li key={r.title} className="relative">
-                          <span aria-hidden="true" className="absolute -left-7 top-[0.55rem] w-3 h-3 rounded-full bg-accent-soft border-2 border-ink" />
-                          <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{r.title}</h3>
-                          <p className="text-[16px] text-muted tabular-nums">{c.name} · {r.period}</p>
-                          <p className="mt-3 text-[17px] leading-relaxed max-w-[62ch]">{r.description}</p>
-                          <p className="mt-3 text-[15px] text-muted">{r.tags.join(", ")}</p>
+                        <li key={r.title} className="relative grid sm:grid-cols-[7rem_1fr] gap-x-8 gap-y-1">
+                          <span className="text-[16px] font-medium text-muted tabular-nums sm:pt-1">{r.period}</span>
+                          <div className="relative">
+                            <span aria-hidden="true" className="hidden sm:block absolute -left-[1.375rem] top-[0.55rem] w-3 h-3 rounded-full bg-accent-soft border-2 border-ink" />
+                            <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{r.title}</h3>
+                            <p className="text-[16px] text-muted">{c.name}</p>
+                            <p className="mt-3 text-[17px] leading-relaxed max-w-[62ch]">{r.description}</p>
+                            <p className="mt-3 text-[15px] text-muted">{r.tags.join(", ")}</p>
+                          </div>
                         </li>
                       ))}
                     </ol>
                   ) : (
+                    <>
+                    <span className="text-[16px] font-medium text-muted tabular-nums sm:pt-1">
+                      {ci === 0 ? <span className="inline-block px-2 rounded-full bg-accent-soft text-on-accent font-bold">{c.period}</span> : c.period}
+                    </span>
                     <div>
                       <h3 className="text-[1.375rem] font-bold leading-snug tracking-[-0.015em]">{roles[0].title}</h3>
                       <p className="text-[16px] text-muted">{c.name}</p>
                       <p className="mt-3 text-[17px] leading-relaxed max-w-[62ch]">{roles[0].description}</p>
                       <p className="mt-3 text-[15px] text-muted">{roles[0].tags.join(", ")}</p>
                     </div>
+                    </>
                   )}
                 </li>
               );
@@ -471,7 +477,7 @@ export default function App() {
         <Section id="talks" title="Talks">
           <ul>
             {TALKS.map((t, i) => (
-              <li key={t.title} className={i ? "border-t border-ink" : ""}>
+              <li key={t.title} className={`[&:last-child>a]:pb-0 ${i ? "border-t border-ink" : ""}`}>
                 <a
                   href={t.link}
                   target="_blank"
@@ -500,7 +506,7 @@ export default function App() {
             Happy to chat with AI builders, product people, or anyone who knows a good coffee shop.
           </p>
           <a href={`mailto:${EMAIL}`} className="group mt-8 inline-flex items-center gap-4 min-h-11 [overflow-wrap:anywhere]">
-            <span className="toon shrink-0 bg-white dark:bg-accent-soft"><Mail aria-hidden="true" className="w-5 h-5" /></span>
+            <span className="toon shrink-0 bg-white"><Mail aria-hidden="true" className="w-5 h-5" /></span>
             <span className="text-[clamp(1.25rem,2.2vw,1.6rem)] font-bold tracking-[-0.015em] underline decoration-2 underline-offset-[6px] decoration-ink/30 group-hover:decoration-ink transition-[text-decoration-color] duration-200">{EMAIL}</span>
           </a>
         </Section>
