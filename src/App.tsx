@@ -222,10 +222,10 @@ function ExtLink({ href, children, className = "", arrow = true }: { href: strin
 
 /* `wide`: heading on top and content across the full width (used by Projects).
    `band`: sits on the pale-yellow closing band shared with the footer (Contact). */
-function Section({ id, title, wide, band, children }: { id: string; title: string; wide?: boolean; band?: boolean; children: React.ReactNode }) {
+function Section({ id, title, wide, band, first, children }: { id: string; title: string; wide?: boolean; band?: boolean; first?: boolean; children: React.ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-h`} className={`scroll-mt-16 px-5 sm:px-10 ${band ? "bg-band" : ""}`}>
-      <div className={`max-w-6xl mx-auto grid lg:grid-cols-12 gap-x-10 gap-y-10 ${band ? "pt-16 sm:pt-20 pb-20 sm:pb-28" : "border-t-2 border-ink pt-8 pb-20 sm:pb-28"}`}>
+      <div className={`max-w-6xl mx-auto grid lg:grid-cols-12 gap-x-10 gap-y-10 ${band ? "pt-16 sm:pt-20 pb-20 sm:pb-28" : first ? "pt-16 sm:pt-20 pb-20 sm:pb-28" : "border-t-2 border-ink pt-8 pb-20 sm:pb-28"}`}>
         <h2 id={`${id}-h`} className={`${wide ? "lg:col-span-12" : "lg:col-span-4 lg:sticky lg:top-24"} self-start text-[clamp(2.25rem,4.5vw,3.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]`}>
           {title}
         </h2>
@@ -275,7 +275,7 @@ export default function App() {
 
 
       {/* ── Nav ── */}
-      <nav aria-label="Primary" className="fixed top-0 inset-x-0 z-50 bg-paper border-b-2 border-ink">
+      <nav aria-label="Primary" className="fixed top-0 inset-x-0 z-50 bg-paper border-b-2 border-edge">
         <div className="px-5 sm:px-10">
           <div className="max-w-6xl mx-auto h-16 flex items-center justify-between">
             <a href="#" className="inline-flex items-center min-h-11 font-extrabold tracking-[-0.02em]">
@@ -351,7 +351,7 @@ export default function App() {
 
       <main id="main">
         {/* ══════════════ HERO ══════════════ */}
-        <header id="top" className="px-5 sm:px-10 pt-32 pb-20 sm:pt-40 sm:pb-28">
+        <header id="top" className="hero-band bg-band px-5 sm:px-10 pt-32 pb-20 sm:pt-40 sm:pb-28">
           <div className="max-w-6xl mx-auto w-full">
             <div className="hero-in">
               <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-lg font-medium">
@@ -385,7 +385,7 @@ export default function App() {
         </header>
 
         {/* ══════════════ ABOUT ══════════════ */}
-        <Section id="about" title="What I do">
+        <Section id="about" title="What I do" first>
           <ul className="max-w-[44ch] space-y-6 text-[clamp(1.15rem,1.8vw,1.35rem)] leading-[1.5] tracking-[-0.01em]">
             {ABOUT.map(({ Icon, text }) => (
               <li key={text} className="group grid grid-cols-[3rem_1fr] gap-4 items-start">
