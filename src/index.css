@@ -16,6 +16,7 @@
   --color-accent-soft: var(--accent-soft);
   --color-on-accent: #0a0a0a;
   --color-slab: var(--slab);
+  --color-band: var(--band);
   --color-on-slab: var(--on-slab);
 
   --color-lavender-50: #fafafc;
@@ -62,12 +63,14 @@
   --accent-soft: #fff0a3;
   --accent-soft-hover: #ffe680;
   --slab: #0a0a0a; --on-slab: #fafafa;
+  --band: #fff7cf; /* pale-yellow closing band behind Contact + footer */
   color-scheme: light;
 }
 :root.dark {
   --ink: #f5f5f5; --paper: #0a0a0a; --muted: #b3b3b3;
   /* the closing slab stays dark instead of inverting to a glare block */
   --slab: #161616; --on-slab: #f5f5f5;
+  --band: #1a1810;
   color-scheme: dark;
 }
 

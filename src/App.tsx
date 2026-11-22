@@ -240,14 +240,16 @@ function ExtLink({ href, children, className = "", arrow = true }: { href: strin
   );
 }
 
-function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+/* `wide`: heading on top and content across the full width (used by Projects).
+   `band`: sits on the pale-yellow closing band shared with the footer (Contact). */
+function Section({ id, title, wide, band, children }: { id: string; title: string; wide?: boolean; band?: boolean; children: React.ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-16 px-5 sm:px-10">
-      <div className="max-w-6xl mx-auto border-t-2 border-ink pt-8 pb-20 sm:pb-28 grid lg:grid-cols-12 gap-x-10 gap-y-10">
-        <h2 id={`${id}-h`} className="lg:col-span-4 lg:sticky lg:top-24 self-start text-[clamp(2.25rem,4.5vw,3.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+    <section id={id} aria-labelledby={`${id}-h`} className={`scroll-mt-16 px-5 sm:px-10 ${band ? "bg-band" : ""}`}>
+      <div className={`max-w-6xl mx-auto grid lg:grid-cols-12 gap-x-10 gap-y-10 ${band ? "pt-16 sm:pt-20 pb-16 sm:pb-20" : "border-t-2 border-ink pt-8 pb-20 sm:pb-28"}`}>
+        <h2 id={`${id}-h`} className={`${wide ? "lg:col-span-12" : "lg:col-span-4 lg:sticky lg:top-24"} self-start text-[clamp(2.25rem,4.5vw,3.5rem)] font-extrabold leading-[0.95] tracking-[-0.03em]`}>
           {title}
         </h2>
-        <div className="lg:col-span-8">{children}</div>
+        <div className={wide ? "lg:col-span-12" : "lg:col-span-8"}>{children}</div>
       </div>
     </section>
   );
@@ -277,7 +279,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileNav]);
 
-  const [featured, ...rest] = PROJECTS;
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -422,69 +423,33 @@ export default function App() {
         </Section>
 
         {/* ══════════════ PROJECTS ══════════════ */}
-        <Section id="projects" title="Projects">
-          {/* Featured: the AI project leads, at full width */}
-          <article id={`project-${featured.id}`} className="group scroll-mt-24">
-            <div className="relative aspect-[16/10] overflow-hidden border-2 border-ink">
-              <ProjectPreview
-                kind={featured.preview}
-                accent="iris"
-                className="mono-img absolute inset-0 w-full h-full"
-              />
-            </div>
-            <div className="mt-6 grid sm:grid-cols-[1fr_auto] gap-x-8 gap-y-3 items-start">
-              <div>
-                <p className="inline-flex items-center gap-2 text-[16px] font-medium text-muted">
-                  <featured.KindIcon aria-hidden="true" className="w-4 h-4" /> {featured.kind}
-                </p>
-                <h3 className="text-[clamp(1.9rem,3.5vw,2.6rem)] font-extrabold leading-[1] tracking-[-0.03em]">
-                  <a href={featured.github} target="_blank" rel="noopener noreferrer" className="group/title inline-flex items-baseline gap-2 decoration-2 underline-offset-[6px] hover:underline">
-                    {featured.title}
-                    <ArrowUpRight aria-hidden="true" className="w-[0.6em] h-[0.6em] self-center transition-transform duration-300 ease-out group-hover/title:-translate-y-0.5 group-hover/title:translate-x-0.5" />
-                    <span className="sr-only"> (code on GitHub, opens in a new tab)</span>
-                  </a>
-                </h3>
-                <p className="mt-3 text-[17px] leading-relaxed max-w-[56ch]">{featured.description}</p>
-                <p className="mt-3 text-[15px] text-muted">{featured.tags.join(", ")}</p>
-              </div>
-              {featured.live && (
-                <div className="flex gap-6 font-semibold">
-                  <ExtLink href={featured.live} className={linkU}>Live site</ExtLink>
-                </div>
-              )}
-            </div>
-          </article>
-
-          <div className="mt-16 grid md:grid-cols-2 gap-x-8 gap-y-14">
-            {rest.map((p) => (
-              <article key={p.title} id={`project-${p.id}`} className="group flex flex-col scroll-mt-24">
+        <Section id="projects" title="Projects" wide>
+          <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+            {PROJECTS.map((p) => (
+              <li key={p.id} id={`project-${p.id}`} className="scroll-mt-24 flex flex-col">
                 <div className="relative aspect-[16/10] overflow-hidden border-2 border-ink">
-                  <ProjectPreview
-                    kind={p.preview}
-                    accent="iris"
-                    className="mono-img absolute inset-0 w-full h-full"
-                  />
+                  <ProjectPreview kind={p.preview} accent="iris" className="mono-img absolute inset-0 w-full h-full" />
                 </div>
-                <p className="mt-5 inline-flex items-center gap-2 text-[16px] font-medium text-muted">
+                <p className="mt-5 inline-flex items-center gap-2 text-[15px] font-medium text-muted">
                   <p.KindIcon aria-hidden="true" className="w-4 h-4" /> {p.kind}
                 </p>
-                <h3 className="text-[1.6rem] font-extrabold leading-tight tracking-[-0.02em]">
+                <h3 className="mt-1 text-[1.45rem] font-bold leading-[1.2] tracking-[-0.02em]">
                   <a href={p.github} target="_blank" rel="noopener noreferrer" className="group/title inline-flex items-baseline gap-2 decoration-2 underline-offset-[6px] hover:underline">
                     {p.title}
                     <ArrowUpRight aria-hidden="true" className="w-[0.6em] h-[0.6em] self-center transition-transform duration-300 ease-out group-hover/title:-translate-y-0.5 group-hover/title:translate-x-0.5" />
                     <span className="sr-only"> (code on GitHub, opens in a new tab)</span>
                   </a>
                 </h3>
-                <p className="mt-2 text-[17px] leading-relaxed">{p.description}</p>
-                <p className="mt-3 text-[15px] text-muted">{p.tags.join(", ")}</p>
+                <p className="mt-2 text-[16px] leading-relaxed">{p.description}</p>
+                <p className="mt-2 text-[14px] text-muted">{p.tags.join(", ")}</p>
                 {p.live && (
-                  <div className="mt-auto pt-4 flex gap-6 font-semibold">
-                    <ExtLink href={p.live} className={linkU}>Live site</ExtLink>
+                  <div className="mt-auto pt-3">
+                    <ExtLink href={p.live} className={`font-semibold ${linkU}`}>Live site</ExtLink>
                   </div>
                 )}
-              </article>
+              </li>
             ))}
-          </div>
+          </ul>
         </Section>
 
         {/* ══════════════ TALKS ══════════════ */}
@@ -515,19 +480,19 @@ export default function App() {
         </Section>
 
         {/* ══════════════ CONTACT ══════════════ */}
-        <Section id="contact" title="Let’s talk!">
+        <Section id="contact" title="Let’s talk!" band>
           <p className="max-w-[44ch] text-[clamp(1.15rem,1.8vw,1.35rem)] leading-[1.5]">
             Happy to chat with AI builders, product people, or anyone who knows a good coffee shop.
           </p>
           <a href={`mailto:${EMAIL}`} className="group mt-8 inline-flex items-center gap-4 min-h-11 [overflow-wrap:anywhere]">
-            <span className="toon shrink-0"><Mail aria-hidden="true" className="w-5 h-5" /></span>
+            <span className="toon shrink-0 bg-white dark:bg-accent-soft"><Mail aria-hidden="true" className="w-5 h-5" /></span>
             <span className="text-[clamp(1.25rem,2.2vw,1.6rem)] font-bold tracking-[-0.015em] underline decoration-2 underline-offset-[6px] decoration-ink/30 group-hover:decoration-ink transition-[text-decoration-color] duration-200">{EMAIL}</span>
           </a>
         </Section>
       </main>
 
-      <footer className="px-5 sm:px-10">
-        <div className="max-w-6xl mx-auto border-t-2 border-ink py-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end text-[15px]">
+      <footer className="px-5 sm:px-10 bg-band">
+        <div className="max-w-6xl mx-auto border-t border-ink/25 py-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end text-[15px]">
           <div className="space-y-2">
             <p className="text-muted">© {new Date().getFullYear()} Shruti Vellanki</p>
           </div>
