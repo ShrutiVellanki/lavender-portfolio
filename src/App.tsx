@@ -480,7 +480,7 @@ export default function App() {
         </Section>
 
         {/* ══════════════ CONTACT ══════════════ */}
-        <Section id="contact" title="Let’s talk!" band>
+        <Section id="contact" title="Let’s talk!" band wide>
           <p className="max-w-[44ch] text-[clamp(1.15rem,1.8vw,1.35rem)] leading-[1.5]">
             Happy to chat with AI builders, product people, or anyone who knows a good coffee shop.
           </p>
